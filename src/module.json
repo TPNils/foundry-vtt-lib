@@ -1,0 +1,29 @@
+{
+  "id": "nils-library",
+  "title": "Nils' Library",
+  "version": "0.0.0",
+  "compatibility": {
+    "minimum": "11",
+    "verified": "12"
+  },
+  "description": "",
+  "authors": [
+    {
+      "name": "TPNils"
+    }
+  ],
+  "url": "",
+  "manifest": "",
+  "download": "",
+  "bugs": "",
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "languages": [],
+  "relationships": {
+    "requires": [],
+    "recommends": [],
+    "systems": []
+  },
+  "socket": false
+}
