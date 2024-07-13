@@ -12,7 +12,7 @@ class ModuleScope {
   public readonly utilsHooks: typeof UtilsHooks;
   public readonly utilsLibWrapper: UtilsLibWrapper;
   public readonly utilsLog: UtilsLog;
-  
+
   constructor(pack: UtilsPackage.Package) {
     UtilsPackage.requireInternalCaller();
 
@@ -26,11 +26,31 @@ class ModuleScope {
 }
 
 const scopes = new Map<string, ModuleScope>();
-export function getLib(): ModuleScope {
-  const caller = UtilsPackage.getCallerPackage();
+
+function getScope(caller: UtilsPackage.Package): ModuleScope {
   const key = `${caller.type}/${caller.id}`;
   if (!scopes.has(key)) {
     scopes.set(key, new ModuleScope(caller));
   }
   return scopes.get(key);
+}
+
+export function utilsCompare(): ModuleScope['utilsCompare'] {
+  return getScope(UtilsPackage.getCallerPackage()).utilsCompare;
+}
+
+export function utilsFoundry(): ModuleScope['utilsFoundry'] {
+  return getScope(UtilsPackage.getCallerPackage()).utilsFoundry;
+}
+
+export function utilsHooks(): ModuleScope['utilsHooks'] {
+  return getScope(UtilsPackage.getCallerPackage()).utilsHooks;
+}
+
+export function utilsLibWrapper(): ModuleScope['utilsLibWrapper'] {
+  return getScope(UtilsPackage.getCallerPackage()).utilsLibWrapper;
+}
+
+export function utilsLog(): ModuleScope['utilsLog'] {
+  return getScope(UtilsPackage.getCallerPackage()).utilsLog;
 }
