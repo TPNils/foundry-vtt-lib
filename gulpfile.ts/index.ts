@@ -21,6 +21,7 @@ import { buildMeta } from './build-meta';
 import { args } from './args';
 import { git } from './git';
 import { FoundryWebsiteApi } from './foundry-website-api';
+import { importTransformer } from './ts-transformers/import-transformer';
 
 const sass = gulpSass(sassCompiler);
 
@@ -29,7 +30,11 @@ class BuildActions {
   private static tsConfig: ts.Project;
   private static getTsConfig(): ts.Project {
     if (BuildActions.tsConfig == null) {
-      BuildActions.tsConfig = ts.createProject('tsconfig.json', {});
+      BuildActions.tsConfig = ts.createProject('tsconfig.json', {
+        getCustomTransformers: (_program) => ({
+          after: [importTransformer],
+        }),
+      });
     }
     return BuildActions.tsConfig;
   }
