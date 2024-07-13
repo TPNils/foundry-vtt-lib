@@ -6,6 +6,7 @@ import { VirtualFragmentNode } from "./virtual-fragment-node";
 import { StoredEventCallback, VirtualAttributeNode, VirtualChildNode, VirtualEventNode, VirtualNode, VirtualParentNode } from "./virtual-node";
 import { VirtualTextNode } from "./virtual-text-node";
 
+const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 const domEscapeCharactersByCode = new Map<string, string>();
 interface DomAttributeDescribe {
   tag: string;
@@ -501,7 +502,7 @@ export class VirtualNodeRenderer {
                     item.parent.insertBefore(item.node, item.addBefore);
                   }
                 } catch (e) {
-                  UtilsLog.error(item, e);
+                  utilsLog.error(item, e);
                 }
                 break;
               }

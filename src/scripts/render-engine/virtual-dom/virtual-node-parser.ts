@@ -6,6 +6,8 @@ import { VirtualHtmlNode } from "./virtual-html-node";
 import { VirtualChildNode, VirtualNode, VirtualParentNode } from "./virtual-node";
 import { VirtualTextNode } from "./virtual-text-node";
 
+const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
+
 // y flag = sticky => allow useage of lastIndex
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/sticky
 const textNodeRegex = /(.*?)(?=<)/ys;
@@ -115,7 +117,7 @@ export class VirtualNodeParser {
         throw new Error(`Invalid html. Found closure for node '${this.regexResult[1]}' but did not encounter a start. Closure is found around character index ${this.currentIndex}. html:\n${this.html}`)
       }
       if (closedNode !== this.currentNode) {
-        UtilsLog.warn(`Did not find closure for node '${this.currentNode.tag}', instead found ${this.regexResult[1]} around character index ${this.currentIndex}. html:\n${this.html}`)
+        utilsLog.warn(`Did not find closure for node '${this.currentNode.tag}', instead found ${this.regexResult[1]} around character index ${this.currentIndex}. html:\n${this.html}`)
       }
       for (let i = this.nodeStack.indexOf(closedNode), length = this.nodeStack.length; i < length; i++) {
         this.nodeStack.pop();

@@ -1,6 +1,7 @@
 import { Stoppable } from "./stoppable";
 import { UtilsHooks } from "./utils-hooks";
 import { UtilsLog } from "./utils-log";
+import { UtilsPackage } from "./utils-package";
 
 let libWrapperResolve: () => void;
 const libWrapperResolvePromise = new Promise<void>((resolve) => libWrapperResolve = resolve);
@@ -40,6 +41,7 @@ interface FuncData {
   readonly stoppable: Stoppable;
 }
 
+const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 const modifiedFunctionsByTarget = new Map<string, ModifiedFunctionWrapper>();
 class ModifiedFunctionWrapper {
   public originalFunction?: (...args: any[]) => any;
@@ -92,7 +94,7 @@ class ModifiedFunctionWrapper {
       }
       return this.functions.get(id).stoppable;
     } catch (e) {
-      UtilsLog.error(`Error occurred when trying to ${type} ${this.target}`);
+      utilsLog.error(`Error occurred when trying to ${type} ${this.target}`);
       throw e;
     }
   }
@@ -124,7 +126,7 @@ class ModifiedFunctionWrapper {
       const validateLastCalled = () => {
         const lastExec = sortedFunctions[index-1];
         if (lastExec.type === 'WRAPPER' && !originalFuncCalled) {
-          UtilsLog.error(`${lastExec.type} did not call the wrapper for ${that.target}, that function will be unregistered.`);
+          utilsLog.error(`${lastExec.type} did not call the wrapper for ${that.target}, that function will be unregistered.`);
           lastExec.stoppable.stop();
         }
       }
@@ -160,7 +162,7 @@ class ModifiedFunctionWrapper {
       }
       return modifiedFunctionsByTarget.get(target);
     } catch (e) {
-      UtilsLog.error(`Error occurred when trying to get ${target}`);
+      utilsLog.error(`Error occurred when trying to get ${target}`);
       throw e;
     }
   }
@@ -186,9 +188,10 @@ class ModifiedFunctionWrapper {
  */
 export class UtilsLibWrapper {
 
-  #module: string;
-  constructor(module: string) {
-    this.#module = module;
+  readonly #package: UtilsPackage.Package;
+  constructor(pack: UtilsPackage.Package) {
+    UtilsPackage.requireInternalCaller();
+    this.#package = pack;
   }
 
   /**
@@ -197,7 +200,7 @@ export class UtilsLibWrapper {
    *  Note that the library will auto-detect if you use this type but do not call the original function, and automatically unregister your wrapper.
    */
   public wrapper(target: string, fn: libWrapper.Func): Promise<Stoppable> {
-    return libWrapperResolvePromise.then(() => ModifiedFunctionWrapper.get(target).add(fn, this.#module, 'WRAPPER'));
+    return libWrapperResolvePromise.then(() => ModifiedFunctionWrapper.get(target).add(fn, this.#package.id, 'WRAPPER'));
   }
 
   /**
@@ -205,7 +208,7 @@ export class UtilsLibWrapper {
    * These will always come after 'WRAPPER'-type wrappers. Order is not guaranteed, but conflicts will be auto-detected.
    */
   public mixed(target: string, fn: libWrapper.Func): Promise<Stoppable> {
-    return libWrapperResolvePromise.then(() => ModifiedFunctionWrapper.get(target).add(fn, this.#module, 'MIXED'));
+    return libWrapperResolvePromise.then(() => ModifiedFunctionWrapper.get(target).add(fn, this.#package.id, 'MIXED'));
   }
 
   /**
@@ -215,7 +218,7 @@ export class UtilsLibWrapper {
    * Note that if the GM has explicitly given your package priority over the existing one, no exception will be thrown and your wrapper will take over.
    */
   public override(target: string, fn: libWrapper.Func): Promise<Stoppable> {
-    return libWrapperResolvePromise.then(() => ModifiedFunctionWrapper.get(target).add(fn, this.#module, 'OVERRIDE'));
+    return libWrapperResolvePromise.then(() => ModifiedFunctionWrapper.get(target).add(fn, this.#package.id, 'OVERRIDE'));
   }
 
 }

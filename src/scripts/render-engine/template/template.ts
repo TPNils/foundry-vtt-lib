@@ -7,6 +7,7 @@ import { VirtualNodeParser } from "../virtual-dom/virtual-node-parser";
 import { VirtualNodeRenderer } from "../virtual-dom/virtual-node-renderer";
 import { VirtualTextNode } from "../virtual-dom/virtual-text-node";
 
+const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 const forAttrRegex = /^\s*let\s+([^\s]+)\s+(of|in)\s([^;]+)(?:;(.*))?$/;
 const forAttrSuffixRegex = /\s*let\s+([^\s]+)\s+=\s([^;]+)/g;
 type PendingNodes<T extends VirtualNode = VirtualNode> = {
@@ -150,7 +151,7 @@ export class Template {
           if (process.instance.hasAttribute('*for')) {
             const regexResult = forAttrRegex.exec(process.instance.getAttribute('*for'));
             if (!regexResult) {
-              UtilsLog.error(`Unable to parse *for expression:`, process.instance.getAttribute('*for'));
+              utilsLog.error(`Unable to parse *for expression:`, process.instance.getAttribute('*for'));
             } else {
               const resolvedExpr = this.parseExpression(regexResult[3], process.localVars);
               let forIndex = 0;
@@ -159,11 +160,11 @@ export class Template {
                 if (typeof resolvedExpr === 'object') {
                   items = Object.keys(resolvedExpr);
                 } else {
-                  UtilsLog.error(`The *for (in) expression did not return an object:`, process.instance.getAttribute('*for'), resolvedExpr);
+                  utilsLog.error(`The *for (in) expression did not return an object:`, process.instance.getAttribute('*for'), resolvedExpr);
                 }
               } else {
                 if (!resolvedExpr[Symbol.iterator]) {                
-                  UtilsLog.error(`The *for (of) expression did not return an array/iterator:`, process.instance.getAttribute('*for'), resolvedExpr);
+                  utilsLog.error(`The *for (of) expression did not return an array/iterator:`, process.instance.getAttribute('*for'), resolvedExpr);
                 } else {
                   items = Object.values(resolvedExpr);
                 }
@@ -194,7 +195,7 @@ export class Template {
                       } else if (readVarName in this.#context) {
                         childItem.localVars[assignVarName] = this.#context[readVarName];
                       } else {
-                        UtilsLog.error(`Could not find variable ${readVarName}`, {templateName: this.name, expression: regexResult[0], thisContext: this.#context, localVars: childItem.localVars})
+                        utilsLog.error(`Could not find variable ${readVarName}`, {templateName: this.name, expression: regexResult[0], thisContext: this.#context, localVars: childItem.localVars})
                       }
                     }
                   }
@@ -417,7 +418,7 @@ export class Template {
       );
       return this.parsedExpressions.get(funcKey).call(namespace);
     } catch (e) {
-      UtilsLog.error('Error executing expression with context', {templateName: this.name, expression: expression, thisContext: this.#context, localVars: localVars, err: e})
+      utilsLog.error('Error executing expression with context', {templateName: this.name, expression: expression, thisContext: this.#context, localVars: localVars, err: e})
       throw e;
     }
   }
@@ -508,8 +509,8 @@ export class Template {
       }
       return alreadyParsedExpression.exec;
     } catch (e) {
-      UtilsLog.error('Error parsing expression with context', {expression: expression, thisContext: this.#context, localVars: localVars, err: e})
-      UtilsLog.error(e)
+      utilsLog.error('Error parsing expression with context', {expression: expression, thisContext: this.#context, localVars: localVars, err: e})
+      utilsLog.error(e)
       throw e;
     }
   }

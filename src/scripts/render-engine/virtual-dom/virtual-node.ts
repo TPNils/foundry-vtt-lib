@@ -2,6 +2,7 @@ import { BindableString, AttributeData } from "../../types/html-data";
 import { UtilsLog } from "../../utils/utils-log";
 import { applySecurity, revokeSecurity, SecureOptions } from "../secure";
 
+const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 class PlaceholderClass {}
 type Constructor<I = PlaceholderClass> = new (...args: any[]) => I;
 
@@ -629,7 +630,7 @@ function generateVNodeContract() {
   lines.push(`export function VNode(params?: NodeParams): Constructor`);
   lines.push(`export function VNode(params: NodeParams = {}): Constructor {`);
 
-  UtilsLog.info('generateVNodeContract\n', lines.join('\n'))
+  utilsLog.info('generateVNodeContract\n', lines.join('\n'))
 }
 
 // generateVNodeContract();

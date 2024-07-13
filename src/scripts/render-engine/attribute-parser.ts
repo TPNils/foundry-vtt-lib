@@ -11,6 +11,7 @@ const prefixesToNamespaces = {
 }
 
 const emptyString = '';
+const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 export class AttributeParser {
 
   public static attrToNs(attrName: string): {name: string; namespace?: string;} {
@@ -48,7 +49,7 @@ export class AttributeParser {
       }
     }
 
-    UtilsLog.error(`Can't serialize type ${typeof value}. Value: `, value);
+    utilsLog.error(`Can't serialize type ${typeof value}. Value: `, value);
     throw new Error(`Can't serialize type ${typeof value}`);
   }
 
@@ -118,7 +119,7 @@ export class AttributeParser {
       value = JSON.parse(value);
     }
     if (options.strict && typeof value !== 'object') {
-      UtilsLog.warn('Failed to parse value to an object. Input: ', inputValue)
+      utilsLog.warn('Failed to parse value to an object. Input: ', inputValue)
       return null;
     }
     

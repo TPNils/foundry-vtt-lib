@@ -1,3 +1,5 @@
+import { UtilsPackage } from "./utils-package";
+
 export type FormattedString = string | {
   message: string;
   color?: string;
@@ -8,24 +10,44 @@ const resetFormat: Required<Omit<FormattedString, 'message'>> = {
 }
 
 export class UtilsLog {
-
-  public static buildInfo(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
-    return UtilsLog.build(console.info, {message: `nils-library`, color: '#ff8f00'}, ...args);
-  }
-  public static buildDebug(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
-    return UtilsLog.build(console.debug, {message: `nils-library`, color: '#ff8f00'}, ...args);
-  }
-  public static buildLog(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
-    return UtilsLog.build(console.log, {message: `nils-library`, color: '#ff8f00'}, ...args);
-  }
-  public static buildWarn(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
-    return UtilsLog.build(console.warn, {message: `nils-library`, color: '#ff8f00'}, ...args);
-  }
-  public static buildError(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
-    return UtilsLog.build(console.error, {message: `nils-library`, color: '#ff8f00'}, ...args);
+  
+  readonly #package: UtilsPackage.Package;
+  constructor(pack: UtilsPackage.Package) {
+    UtilsPackage.requireInternalCaller();
+    this.#package = pack;
   }
 
-  private static build(logFunc: Function, ...args: FormattedString[]) {
+  public buildInfo(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
+    return UtilsLog.#build(console.info, {message: this.#package.id, color: '#ff8f00'}, ...args);
+  }
+  public buildDebug(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
+    return UtilsLog.#build(console.debug, {message: this.#package.id, color: '#ff8f00'}, ...args);
+  }
+  public buildLog(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
+    return UtilsLog.#build(console.log, {message: this.#package.id, color: '#ff8f00'}, ...args);
+  }
+  public buildWarn(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
+    return UtilsLog.#build(console.warn, {message: this.#package.id, color: '#ff8f00'}, ...args);
+  }
+  public buildError(...args: FormattedString[]): (message?: any, ...optionalParams: any[]) => void {
+    return UtilsLog.#build(console.error, {message: this.#package.id, color: '#ff8f00'}, ...args);
+  }
+
+  public info = this.#createWithPrefix('info');
+  public debug = this.#createWithPrefix('debug');
+  public log = this.#createWithPrefix('log');
+  public warn = this.#createWithPrefix('warn');
+  public error = this.#createWithPrefix('error');
+
+  #createWithPrefix<T extends keyof Console>(key: T): Console[T] {
+    if (typeof console[key] === 'function') {
+      return UtilsLog.#build(console[key], {message: this.#package.id, color: '#ff8f00'});
+    } else {
+      return console[key];
+    }
+  }
+
+  static #build(logFunc: Function, ...args: FormattedString[]) {
     const messageParts: string[] = [];
     const styles: string[] = [];
     for (let arg of args) {
@@ -42,20 +64,6 @@ export class UtilsLog {
     }
 
     return logFunc.bind(console, messageParts.join(' '), ...styles);
-  }
-
-  public static info = UtilsLog.createWithPrefix('info');
-  public static debug = UtilsLog.createWithPrefix('debug');
-  public static log = UtilsLog.createWithPrefix('log');
-  public static warn = UtilsLog.createWithPrefix('warn');
-  public static error = UtilsLog.createWithPrefix('error');
-
-  private static createWithPrefix<T extends keyof Console>(key: T): Console[T] {
-    if (typeof console[key] === 'function') {
-      return UtilsLog.build(console[key], {message: `nils-library`, color: '#ff8f00'});
-    } else {
-      return console[key];
-    }
   }
 
 }
