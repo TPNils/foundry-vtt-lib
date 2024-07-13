@@ -17,7 +17,8 @@
   "download": "",
   "bugs": "",
   "esmodules": [
-    "scripts/main.js"
+    "scripts/utils/utils-hooks.js",
+    "scripts/utils/utils-lib-wrapper.js"
   ],
   "languages": [],
   "relationships": {
