@@ -11,7 +11,7 @@ export class UtilsPackage {
 
   public static getCallerPackage(options: {[verifiedStack]?: string} = {}): UtilsPackage.Package {
     const stack = options?.[verifiedStack] ?? new Error().stack;
-    // Line 0 = UtilsPackage
+    // Line 0 = this method
     // Line 1 = the method who wan't to know it's caller
     // Line 2 = the caller
     const callerLine = stack.split('\n')[2];

@@ -56,7 +56,7 @@ class ModuleScope {
         }
         throw new Error(`Components need to be prefixed with the module name (${pack.id}) or an abbreviation of it (minimum 2 characters) followed by a minus "-". Example: ${examples.map(e => `"${e}"`).join(', ')}. Found: ${tag}`);
       }
-      return Component(config);
+      return C.Component(config);
     }
     this.attribute = Attribute;
     this.bindEvent = BindEvent;
