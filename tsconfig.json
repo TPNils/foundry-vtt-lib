@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     "moduleResolution": "node",
     "target": "ES6",
     "experimentalDecorators": true,
@@ -8,7 +9,7 @@
     "sourceMap": true,
     "allowUmdGlobalAccess": true
   },
-  "include": [ "src/**/*", "gulpfile.ts/**/*" ],
+  "include": [ "src/**/*" ],
   "exclude": ["node_modules"],
   "ts-node": {
     "compilerOptions": {
