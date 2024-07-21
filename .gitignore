@@ -2,7 +2,6 @@
 !/.gitignore
 !/.npmignore
 !/.github
-!/gulpfile.ts
 !/config.json
 !/package.json
 !/package-lock.json
@@ -10,7 +9,6 @@
 !/LICENSE
 !/README.md
 !/TODO.md
-!/lib-find-the-path
 !/.gitmodules
 !/.eslintrc.json
 
