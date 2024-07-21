@@ -17,7 +17,8 @@
     "major": "foundry-vtt-build-tools publish -u major",
     "reupload": "foundry-vtt-build-tools reupload",
     "updateZipManifestForGithub": "foundry-vtt-build-tools updateZipManifestForGithub",
-    "updateExternalManifestForGithub": "foundry-vtt-build-tools updateExternalManifestForGithub"
+    "updateExternalManifestForGithub": "foundry-vtt-build-tools updateExternalManifestForGithub",
+    "prepare": "npm run build"
   },
   "types": "./dist/scripts/index.d.ts",
   "author": "",
