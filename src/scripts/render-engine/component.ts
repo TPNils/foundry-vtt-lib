@@ -32,7 +32,7 @@ interface ComponentConfigInternal extends ComponentConfig {
   parsedHtml?: VirtualNode & VirtualParentNode;
   hasHtmlSlots: boolean;
 }
-export function Component(config: ComponentConfig | string) {
+export function Component(config: ComponentConfig | string): <T extends new (...args: any[]) => {}>(constructor: T) => void {
   if (typeof config === 'string') {
     config = {tag: config};
   }
