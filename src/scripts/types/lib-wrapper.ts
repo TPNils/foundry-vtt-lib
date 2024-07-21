@@ -84,7 +84,7 @@ declare global {
       target: string,
       fn: libWrapper.Func,
       type: 'WRAPPER' | 'MIXED' | 'OVERRIDE',
-      options: {
+      options?: {
         chain?: boolean;
         perf_mode?: 'NORMAL' | 'FAST' | 'AUTO'
       }
@@ -110,6 +110,6 @@ declare global {
      *
      * @param {function} fail         [Optional] If true, this method will throw an exception if it fails to find the method to unwrap. Default is 'true'.
      */
-    function unregister(package_id: string, target: number | string, fail: boolean);
+    function unregister(package_id: string, target: number | string, fail?: boolean);
   }
 }
