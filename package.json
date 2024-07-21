@@ -2,8 +2,11 @@
   "name": "nils-library",
   "version": "1.1.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "foundry-vtt-build-tools build",
+    "build11": "foundry-vtt-build-tools build -fi v11",
+    "build12": "foundry-vtt-build-tools build -fi v12",
     "package": "foundry-vtt-build-tools buildZip",
     "compileReadme": "foundry-vtt-build-tools compileReadme",
     "dev": "foundry-vtt-build-tools watch",
@@ -16,9 +19,10 @@
     "updateZipManifestForGithub": "foundry-vtt-build-tools updateZipManifestForGithub",
     "updateExternalManifestForGithub": "foundry-vtt-build-tools updateExternalManifestForGithub"
   },
+  "types": "./dist/scripts/index.d.ts",
   "author": "",
   "license": "GPL-3.0-only",
   "devDependencies": {
-    "foundry-vtt-build-tools": "github:TPNils/foundry-vtt-build-tools#v0.1.1"
+    "foundry-vtt-build-tools": "github:TPNils/foundry-vtt-build-tools#v0.1.3"
   }
 }
