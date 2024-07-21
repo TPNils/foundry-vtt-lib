@@ -23,7 +23,7 @@ export class UtilsPackage {
         type: match[1].replace(/s$/, '').toLowerCase() as UtilsPackage.Package['type'],
       })
     }
-    return null;
+    return {id: 'world', type: 'world'};
   }
 
   public static requireInternalCaller(): void {

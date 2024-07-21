@@ -1,11 +1,11 @@
-import { AnyNodeData } from "../types/html-data";
-import { Stoppable } from "../utils/stoppable";
-import { AttributeParser } from "./attribute-parser";
-import { Template } from "./template/template";
-import { rerenderQueue } from "./virtual-dom/render-queue";
-import { VirtualAttributeNode, VirtualNode, VirtualParentNode } from "./virtual-dom/virtual-node";
-import { VirtualNodeParser } from "./virtual-dom/virtual-node-parser";
-import { VirtualNodeRenderer } from "./virtual-dom/virtual-node-renderer";
+import { AnyNodeData } from "../types/html-data.js";
+import { Stoppable } from "../utils/stoppable.js";
+import { AttributeParser } from "./attribute-parser.js";
+import { Template } from "./template/template.js";
+import { rerenderQueue } from "./virtual-dom/render-queue.js";
+import { VirtualAttributeNode, VirtualNode, VirtualParentNode } from "./virtual-dom/virtual-node.js";
+import { VirtualNodeParser } from "./virtual-dom/virtual-node-parser.js";
+import { VirtualNodeRenderer } from "./virtual-dom/virtual-node-renderer.js";
 
 //#region Decorators
 const componentConfigSymbol = Symbol('ComponentConfig');

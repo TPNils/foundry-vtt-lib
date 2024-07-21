@@ -1,7 +1,7 @@
-import { Stoppable } from "./stoppable";
-import { UtilsHooks } from "./utils-hooks";
-import { UtilsLog } from "./utils-log";
-import { UtilsPackage } from "./utils-package";
+import { Stoppable } from "./stoppable.js";
+import { UtilsHooks } from "./utils-hooks.js";
+import { UtilsLog } from "./utils-log.js";
+import { UtilsPackage } from "./utils-package.js";
 
 let libWrapperResolve: () => void;
 const libWrapperResolvePromise = new Promise<void>((resolve) => libWrapperResolve = resolve);

@@ -1,4 +1,4 @@
-import { UtilsHooks } from "./utils-hooks";
+import { UtilsHooks } from "./utils-hooks.js";
 
 export class Version {
   

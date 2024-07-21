@@ -1,10 +1,10 @@
-import { ElementData, AnyNodeData, AttributeData, BindableString } from "../../types/html-data";
-import { UtilsLog } from "../../utils/utils-log";
-import { VirtualCommentNode } from "./virtual-comment-node";
-import { VirtualFragmentNode } from "./virtual-fragment-node";
-import { VirtualHtmlNode } from "./virtual-html-node";
-import { VirtualChildNode, VirtualNode, VirtualParentNode } from "./virtual-node";
-import { VirtualTextNode } from "./virtual-text-node";
+import { ElementData, AnyNodeData, AttributeData, BindableString } from "../../types/html-data.js";
+import { UtilsLog } from "../../utils/utils-log.js";
+import { VirtualCommentNode } from "./virtual-comment-node.js";
+import { VirtualFragmentNode } from "./virtual-fragment-node.js";
+import { VirtualHtmlNode } from "./virtual-html-node.js";
+import { VirtualChildNode, VirtualNode, VirtualParentNode } from "./virtual-node.js";
+import { VirtualTextNode } from "./virtual-text-node.js";
 
 const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 

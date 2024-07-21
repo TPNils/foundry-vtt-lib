@@ -1,4 +1,4 @@
-import { UtilsFoundry, Version } from "./utils-foundry";
+import { UtilsFoundry, Version } from "./utils-foundry.js";
 
 type HookResolve<T = void> = (value: T | PromiseLike<T>) => void;
 

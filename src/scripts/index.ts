@@ -1,10 +1,10 @@
-import * as C from "./render-engine/component";
-import { UtilsCompare } from "./utils/utils-compare";
-import { UtilsFoundry } from "./utils/utils-foundry";
-import { UtilsHooks } from "./utils/utils-hooks";
-import { UtilsLibWrapper } from "./utils/utils-lib-wrapper";
-import { UtilsLog } from "./utils/utils-log";
-import { UtilsPackage } from "./utils/utils-package";
+import * as C from "./render-engine/component.js";
+import { UtilsCompare } from "./utils/utils-compare.js";
+import { UtilsFoundry } from "./utils/utils-foundry.js";
+import { UtilsHooks } from "./utils/utils-hooks.js";
+import { UtilsLibWrapper } from "./utils/utils-lib-wrapper.js";
+import { UtilsLog } from "./utils/utils-log.js";
+import { UtilsPackage } from "./utils/utils-package.js";
 
 class ModuleScope {
 

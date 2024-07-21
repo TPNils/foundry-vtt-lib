@@ -1,4 +1,4 @@
-import { UtilsPackage } from "./utils-package";
+import { UtilsPackage } from "./utils-package.js";
 
 export type FormattedString = string | {
   message: string;

@@ -1,4 +1,4 @@
-import { UtilsLog } from "../utils/utils-log";
+import { UtilsLog } from "../utils/utils-log.js";
 
 export interface InputParseOptions {
   executeFunctions?: boolean;

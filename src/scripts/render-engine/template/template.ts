@@ -1,11 +1,11 @@
-import { UtilsCompare } from "../../utils/utils-compare";
-import { UtilsLog } from "../../utils/utils-log";
-import { rerenderQueue } from "../virtual-dom/render-queue";
-import { VirtualFragmentNode } from "../virtual-dom/virtual-fragment-node";
-import { isVirtualNode, VirtualChildNode, VirtualNode, VirtualParentNode } from "../virtual-dom/virtual-node";
-import { VirtualNodeParser } from "../virtual-dom/virtual-node-parser";
-import { VirtualNodeRenderer } from "../virtual-dom/virtual-node-renderer";
-import { VirtualTextNode } from "../virtual-dom/virtual-text-node";
+import { UtilsCompare } from "../../utils/utils-compare.js";
+import { UtilsLog } from "../../utils/utils-log.js";
+import { rerenderQueue } from "../virtual-dom/render-queue.js";
+import { VirtualFragmentNode } from "../virtual-dom/virtual-fragment-node.js";
+import { isVirtualNode, VirtualChildNode, VirtualNode, VirtualParentNode } from "../virtual-dom/virtual-node.js";
+import { VirtualNodeParser } from "../virtual-dom/virtual-node-parser.js";
+import { VirtualNodeRenderer } from "../virtual-dom/virtual-node-renderer.js";
+import { VirtualTextNode } from "../virtual-dom/virtual-text-node.js";
 
 const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 const forAttrRegex = /^\s*let\s+([^\s]+)\s+(of|in)\s([^;]+)(?:;(.*))?$/;

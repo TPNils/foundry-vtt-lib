@@ -1,5 +1,5 @@
-import { TextData } from "../../types/html-data";
-import { VirtualAttributeNode, VirtualEventNode, VirtualNode, VirtualParentNode, VNode } from "./virtual-node";
+import { TextData } from "../../types/html-data.js";
+import { VirtualAttributeNode, VirtualEventNode, VirtualNode, VirtualParentNode, VNode } from "./virtual-node.js";
 
 export class VirtualTextNode extends VNode({child: true, text: true}) implements VirtualNode {
 

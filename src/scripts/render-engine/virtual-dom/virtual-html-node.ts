@@ -1,5 +1,5 @@
-import { AttributeParser } from "../attribute-parser";
-import { VirtualNode, VirtualTextNode, VNode } from "./virtual-node";
+import { AttributeParser } from "../attribute-parser.js";
+import { VirtualNode, VirtualTextNode, VNode } from "./virtual-node.js";
 
 export class VirtualHtmlNode extends VNode({attribute: true, child: true, event: true, parent: true}) implements VirtualNode {
   

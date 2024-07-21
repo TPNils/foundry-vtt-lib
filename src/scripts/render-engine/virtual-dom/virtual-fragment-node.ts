@@ -1,4 +1,4 @@
-import { VirtualAttributeNode, VirtualChildNode, VirtualEventNode, VirtualNode, VirtualTextNode, VNode } from "./virtual-node";
+import { VirtualAttributeNode, VirtualChildNode, VirtualEventNode, VirtualNode, VirtualTextNode, VNode } from "./virtual-node.js";
 
 export class VirtualFragmentNode extends VNode({parent: true}) implements VirtualNode {
 

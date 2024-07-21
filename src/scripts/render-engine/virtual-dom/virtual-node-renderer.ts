@@ -1,10 +1,10 @@
-import { UtilsLog } from "../../utils/utils-log";
-import { AttributeParser } from "../attribute-parser";
-import { Component } from "../component";
-import { rerenderQueue } from "./render-queue";
-import { VirtualFragmentNode } from "./virtual-fragment-node";
-import { StoredEventCallback, VirtualAttributeNode, VirtualChildNode, VirtualEventNode, VirtualNode, VirtualParentNode } from "./virtual-node";
-import { VirtualTextNode } from "./virtual-text-node";
+import { UtilsLog } from "../../utils/utils-log.js";
+import { AttributeParser } from "../attribute-parser.js";
+import { Component } from "../component.js";
+import { rerenderQueue } from "./render-queue.js";
+import { VirtualFragmentNode } from "./virtual-fragment-node.js";
+import { StoredEventCallback, VirtualAttributeNode, VirtualChildNode, VirtualEventNode, VirtualNode, VirtualParentNode } from "./virtual-node.js";
+import { VirtualTextNode } from "./virtual-text-node.js";
 
 const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 const domEscapeCharactersByCode = new Map<string, string>();

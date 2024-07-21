@@ -1,6 +1,6 @@
-import { BindableString, AttributeData } from "../../types/html-data";
-import { UtilsLog } from "../../utils/utils-log";
-import { applySecurity, revokeSecurity, SecureOptions } from "../secure";
+import { BindableString, AttributeData } from "../../types/html-data.js";
+import { UtilsLog } from "../../utils/utils-log.js";
+import { applySecurity, revokeSecurity, SecureOptions } from "../secure.js";
 
 const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
 class PlaceholderClass {}
