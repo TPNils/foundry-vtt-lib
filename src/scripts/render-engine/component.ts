@@ -10,8 +10,8 @@ import { VirtualNodeRenderer } from "./virtual-dom/virtual-node-renderer.js";
 //#region Decorators
 const componentConfigSymbol = Symbol('ComponentConfig');
 const htmlElementSymbol = Symbol('HtmlElement');
-const cssHostIdAttrPrefix = `nils-library-hid`;
-const cssComponentIdAttrPrefix = `nils-library-cid`;
+const cssHostIdAttr = `nils-library-hid`;
+const cssComponentIdAttr = `nils-library-cid`;
 
 const componentInstanceProxyHandler: ProxyHandler<{[htmlElementSymbol]: ComponentElement}> = {
   set: (target: {[htmlElementSymbol]: ComponentElement}, field: string | symbol, value: any, receiver: any): boolean => {
@@ -63,7 +63,7 @@ export function Component(config: ComponentConfig | string): <T extends new (...
             internalConfig.hasHtmlSlots = true;
           }
           if (process.isAttributeNode()) {
-            process.setAttribute(`${cssComponentIdAttrPrefix}-${internalConfig.componentId}`)
+            process.setAttribute(cssComponentIdAttr, internalConfig.tag);
           }
           if (process.isParentNode()) {
             for (const child of process.childNodes) {
@@ -406,7 +406,7 @@ export class ComponentElement extends HTMLElement {
   }
 
   public getHostAttribute(): string {
-    return `${cssHostIdAttrPrefix}-${this.getComponentConfig().componentId}`;
+    return cssHostIdAttr;
   }
 
   private getComponentConfig(): ComponentConfigInternal {
@@ -515,7 +515,7 @@ export class ComponentElement extends HTMLElement {
     this.readAllAttributes();
     const hostAttr = this.getHostAttribute();
     if (!this.hasAttribute(hostAttr)) {
-      this.setAttribute(hostAttr, '');
+      this.setAttribute(hostAttr, this.getComponentConfig().tag);
     }
 
     if (this.getComponentConfig().hasHtmlSlots) {
@@ -732,11 +732,11 @@ export class ComponentElement extends HTMLElement {
     if (!this.getComponentConfig().hasHtmlSlots || !this.template) {
       return;
     }
-    const componentId = this.getComponentConfig().componentId;
+    const tag = this.getComponentConfig().tag;
 
     const replacementElementsBySlotName = new Map<string, Array<Element>>();
     for (const slotName of this.elementsBySlotName.keys()) {
-      replacementElementsBySlotName.set(slotName, Array.from(this.querySelectorAll(`:scope > [slot="${slotName}"]:not([${cssComponentIdAttrPrefix}-${componentId}]), :scope > [data-slot="${slotName}"]:not([${cssComponentIdAttrPrefix}-${componentId}])`)));
+      replacementElementsBySlotName.set(slotName, Array.from(this.querySelectorAll(`:scope > [slot="${slotName}"]:not([${cssComponentIdAttr}="${tag}"]), :scope > [data-slot="${slotName}"]:not([${cssComponentIdAttr}="${tag}"])`)));
     }
     
     // Check if the target slots still match
