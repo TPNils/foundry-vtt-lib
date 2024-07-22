@@ -18,7 +18,8 @@
   "bugs": "",
   "esmodules": [
     "scripts/utils/utils-hooks.js",
-    "scripts/utils/utils-lib-wrapper.js"
+    "scripts/utils/utils-lib-wrapper.js",
+    "scripts/render-engine/component-foundry-connector.js"
   ],
   "languages": [],
   "relationships": {
