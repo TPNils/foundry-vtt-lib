@@ -28,7 +28,6 @@ export interface ComponentConfig {
   style?: string;
 }
 interface ComponentConfigInternal extends ComponentConfig {
-  componentId: string;
   parsedHtml?: VirtualNode & VirtualParentNode;
   hasHtmlSlots: boolean;
 }
@@ -44,7 +43,6 @@ export function Component(config: ComponentConfig | string): <T extends new (...
 
   return function<T extends { new (...args: any[]): {} }>(constructor: T) {
     const internalConfig: ComponentConfigInternal = {
-      componentId: (config as any).componentId, // Should be provided by the compiler
       ...config as ComponentConfig,
       hasHtmlSlots: false,
     }
@@ -118,7 +116,7 @@ export function Component(config: ComponentConfig | string): <T extends new (...
     customElements.define(internalConfig.tag, element);
     if (internalConfig.style) {
       const styleElement = document.createElement('style');
-      styleElement.id = 'nils-library-element-' + internalConfig.componentId;
+      styleElement.id = 'nils-library-element-' + internalConfig.tag;
       styleElement.innerHTML = internalConfig.style;
       
       document.head.appendChild(styleElement);
