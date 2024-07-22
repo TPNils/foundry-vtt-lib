@@ -1,5 +1,3 @@
-import { utilsLog } from "../module-scope";
-
 type Writeable<T extends { [x: string]: any }, K extends string = keyof T & string> = {
   [P in K]: T[P];
 }
@@ -77,7 +75,6 @@ export function regexGroup(regex: RegExp, groupNr: number) {
       return null;
     }
     
-    utilsLog().debug(regex, groupNr, regexResult)
     return {
       consumed: regexResult[0],
       result: regexResult[groupNr]

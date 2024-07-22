@@ -1,4 +1,3 @@
-import { utilsLog } from "../../module-scope.js";
 import { ElementData, AnyNodeData, AttributeData, BindableString, BindExpressionValue } from "../../types/html-data.js";
 import { ParsedToken, CustomPatternMatcherFunc, regexGroup, Lexer, tokenize } from "../lexer.js";
 import { VirtualCommentNode } from "./virtual-comment-node.js";
@@ -177,7 +176,6 @@ export class VirtualNodeParser {
       throw new Error('Internal compile error: missing how to parse token: ' + token.lexerToken.name)
     };
 
-    utilsLog().debug(text, response);
     return response;
   }
 
