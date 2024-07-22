@@ -1,175 +1,209 @@
-import { ElementData, AnyNodeData, AttributeData, BindableString } from "../../types/html-data.js";
-import { UtilsLog } from "../../utils/utils-log.js";
+import { utilsLog } from "../../module-scope.js";
+import { ElementData, AnyNodeData, AttributeData, BindableString, BindExpressionValue } from "../../types/html-data.js";
+import { ParsedToken, CustomPatternMatcherFunc, regexGroup, Lexer, tokenize } from "../lexer.js";
 import { VirtualCommentNode } from "./virtual-comment-node.js";
 import { VirtualFragmentNode } from "./virtual-fragment-node.js";
 import { VirtualHtmlNode } from "./virtual-html-node.js";
 import { VirtualChildNode, VirtualNode, VirtualParentNode } from "./virtual-node.js";
 import { VirtualTextNode } from "./virtual-text-node.js";
 
-const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
+function getExpectedEndBind(previousTokens: ParsedToken[]): string | null {
+  let lastOpen: ParsedToken;
+  for (let i = previousTokens.length - 1; i >= 0; i--) {
+    if (previousTokens[i].lexerToken.name === 'startBinding') {
+      lastOpen = previousTokens[i];
+      break;
+    }
+  }
+  if (!lastOpen) {
+    return null;
+  }
 
-// y flag = sticky => allow useage of lastIndex
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/sticky
-const textNodeRegex = /(.*?)(?=<)/ys;
-const commentNodeRegex = /\s*<!--(.*?)-->/ys;
+  return '}'.repeat(lastOpen.result.length);
+}
 
-// https://www.ibm.com/docs/en/app-connect-pro/7.5.3?topic=schemas-valid-node-names
-const startElementPrefixRegex = /\s*<([a-zA-Z_][a-zA-Z0-9_\-\.]*)/y;
-const startElementSuffixRegex = /\s*(\/)?>/y;
-const endElementRegex = /\s*<\/([a-zA-Z_][a-zA-Z0-9_\-\.]*)>/y;
+function endBindingPattern(text: string, offset: number, previousTokens: ParsedToken[]): ReturnType<CustomPatternMatcherFunc> {
+  const expected = getExpectedEndBind(previousTokens);
+  if (!expected) {
+    return null;
+  }
+  if (text.substring(offset, offset + expected.length) === expected) {
+    return {result: expected, consumed: expected};
+  }
+  return null;
+}
 
-// https://www.w3.org/TR/2012/WD-html-markup-20120329/syntax.html
-const attrValueNoQuoteRegex = /([^"'=<>`\s]+)/y;
-const attrValueDoubleQuoteRegex = /""|"(.*?[^\\](?:\\\\)*)"/ys;
-const attrValueSingleQuoteRegex = /''|'(.*?[^\\](?:\\\\)*)'/ys;
-const attrNameRegex = /([^\s"'>/=]+)/y;
-const attrRegex = new RegExp(`\\s*${attrNameRegex.source}(?:\\s*=(?:${attrValueNoQuoteRegex.source}|\\s*${attrValueDoubleQuoteRegex.source}|\\s*${attrValueSingleQuoteRegex.source}))?`, `ys`)
-const attrQuotesSorted = ['', `"`, `'`] as const;
+function jsNoQuotesPattern(text: string, offset: number, previousTokens: ParsedToken[]): ReturnType<CustomPatternMatcherFunc> {
+  const expected = getExpectedEndBind(previousTokens);
+  if (!expected) {
+    return null;
+  }
+  return regexGroup(new RegExp(/[^'"`]+?(?=(}}}|"|'|`))/.source.replace('}}}', expected), 's'), 0)(text, offset);
+}
 
-// https://html.spec.whatwg.org/multipage/syntax.html#void-elements
-const voidElementsTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'].map(tag => tag.toUpperCase());
+const bindableStringLexer: Lexer = {
+  defaultMode: 'freeText',
+  tokens: {
+    freeText: {pattern: /[^{].*?(?={{)/s},
+    remainingText: {pattern: {regex: /(.+)/s, group: 1}},
+    startBinding: {pattern: /{{{?/, push_mode: 'bound'},
+    endBinding: {pattern: endBindingPattern, pop_mode: true},
+
+    jsNoQuotes: {pattern: jsNoQuotesPattern},
+    jsSingleQuote: {pattern: /(?<!\\)(?:\\\\)*(?:''|'(.*?[^\\](?:\\\\)*)')/s},
+    jsDoubleQuote: {pattern: /(?<!\\)(?:\\\\)*(?:""|"(.*?[^\\](?:\\\\)*)")/s},
+
+    jsStartBacktickQuote: {pattern: /(?<!\\)(?:\\\\)*`/, push_mode: 'backtick'},
+    jsBacktickValue: {pattern: /[^`].*?(?=((?<!\\)(?:\\\\)*(?:`))|((?<!\\)(?:\\\\)*(?:\$)((?<!\\)(?:\\\\)*{)))/s},
+    jsEndBacktickQuote: {pattern: /(?<!\\)(?:\\\\)*`/, pop_mode: true},
+    jsStartInterpolation: {pattern: /(?<!\\)(?:\\\\)*\$(?<!\\)(?:\\\\)*{/, push_mode: 'interpolation'},
+    jsEndInterpolation: {pattern: /(?<!\\)(?:\\\\)*}/, pop_mode: true},
+  },
+  modes: {
+    // Order matters, the first in the array will get matched first
+    freeText: [
+      'freeText',
+      'startBinding',
+      'remainingText',
+    ],
+    bound: [
+      'endBinding',
+      'jsSingleQuote',
+      'jsDoubleQuote',
+      'jsNoQuotes',
+      'jsStartBacktickQuote',
+    ],
+    interpolation: [
+      'jsEndInterpolation',
+      'jsSingleQuote',
+      'jsDoubleQuote',
+      'jsNoQuotes',
+    ],
+    backtick: [
+      'jsStartInterpolation',
+      'jsEndBacktickQuote',
+      'jsBacktickValue',
+    ],
+  }
+};
 
 export class VirtualNodeParser {
 
-  private currentIndex = 0;
-  private get currentNode(): ElementData {
-    return this.nodeStack.length === 0 ? null : this.nodeStack[this.nodeStack.length - 1];
-  }
-  private nodeStack: ElementData[] = [];
-  private regexResult: RegExpExecArray; // don't keep defining new variables for efficiency
-  private constructor(private html: string) {
+  private constructor() {
   }
 
-  private startParse(): AnyNodeData[] {
-    const rootNode: AnyNodeData = {
+  public static htmlToAnyNodeData(html: string): AnyNodeData[] {
+    const body = new DOMParser().parseFromString(html, 'text/html').body;
+    const rootNode: ElementData = {
       type: 'element',
       tag: '#root#',
       attributes: {},
       children: []
     };
-    this.nodeStack.push(rootNode);
-    let indexSnapshot: number;
-    do {
-      indexSnapshot = this.currentIndex;
-      this.readTextNode();
-      this.readCommentNode();
-      this.readStartElement();
-      this.readEndElement();
-      if (indexSnapshot === this.currentIndex && this.currentIndex < this.html.length) {
-        throw new Error(`Internal error. Could not parse html, stuck at index ${indexSnapshot}. html:\n${this.html}`)
+    let pending: Array<{parent: ElementData, toParse: Node}> = [];
+    for (const node of Array.from(body.childNodes)) {
+      pending.push({parent: rootNode, toParse: node});
+    }
+
+    let i = 0;
+    while (pending.length > 0) {
+      i++;
+      if (i >= 1000) {
+        throw new Error(`Infinite loop while parsing html: ${html}`)
       }
-    } while (this.currentIndex < this.html.length)
+      const processing = pending;
+      pending = [];
+      for (const process of processing) {
+        if (process.toParse instanceof Text) {
+          process.parent.children.push({type: 'text', text: VirtualNodeParser.#parseBindableString(process.toParse.textContent)});
+        } else if (process.toParse instanceof Comment) {
+          process.parent.children.push({type: 'comment', text: VirtualNodeParser.#parseBindableString(process.toParse.textContent)});
+        } else if (process.toParse instanceof Attr) {
+          const attr = VirtualNodeParser.#parseAttribute(process.toParse);
+          process.parent.attributes[attr.name] = attr;
+        } else if (process.toParse instanceof Element) {
+          const element: ElementData = {
+            type: 'element',
+            tag: process.toParse.tagName,
+            attributes: {},
+            children: [],
+          }
+
+          for (const attr of Array.from(process.toParse.attributes)) {
+            const attrData = VirtualNodeParser.#parseAttribute(attr);
+            process.parent.attributes[attrData.name] = attrData;
+          }
+
+          for (const node of Array.from(process.toParse.childNodes)) {
+            pending.push({parent: element, toParse: node});
+          }
+          process.parent.children.push(element);
+        }
+        // TODO https://developer.mozilla.org/en-US/docs/Web/API/CDATASection
+        // TODO https://developer.mozilla.org/en-US/docs/Web/API/ProcessingInstruction
+      }
+    }
 
     return rootNode.children;
   }
 
-  private readTextNode(): void {
-    if (!this.exec(textNodeRegex)) {
-      // Text is the last part that needs to be parsed => no special characters found
-      const value = this.html.substring(this.currentIndex);
-      if (value.trim().length > 0) {
-        this.currentNode.children.push({type: 'text', text: [{type: 'string', text: value}]});
-      }
-      this.currentIndex = this.html.length;
-      return;
-    }
-
-    // A special character is found => something else needs to be parsed
-    if (this.regexResult[1].trim().length > 0) {
-      this.currentNode.children.push({type: 'text', text: [{type: 'string', text: this.regexResult[1]}]});
-    }
-  }
-
-  private readCommentNode(): void {
-    if (this.exec(commentNodeRegex)) {
-      this.currentNode.children.push({type: 'comment', text: [{type: 'string', text: this.regexResult[1]}]});
-    }
-  }
-
-  private readStartElement(): void {
-    if (this.exec(startElementPrefixRegex)) {
-      const node: ElementData = {
-        type: 'element',
-        tag: this.regexResult[1],
-        attributes: {},
-        children: [],
-      }
-      this.currentNode.children.push(node);
-      this.nodeStack.push(node);
-      this.readAttributes();
-      if (!this.exec(startElementSuffixRegex)) {
-        throw new Error(`Invalid html. Did not find closure for node '${node.tag}' around character index ${this.currentIndex}. html:\n${this.html}`)
-      }
-      if (voidElementsTags.includes(node.tag) || this.regexResult[1] != null) {
-        // Element is self closed
-        this.nodeStack.pop();
-      }
-    }
-  }
-
-  private readEndElement(): void {
-    if (this.exec(endElementRegex)) {
-      let closedNode = this.currentNode;
-      while (this.regexResult[1].toUpperCase() !== closedNode.tag.toUpperCase()) {
-        closedNode = this.nodeStack[this.nodeStack.indexOf(closedNode) - 1];
-      }
-      if (closedNode === null) {
-        throw new Error(`Invalid html. Found closure for node '${this.regexResult[1]}' but did not encounter a start. Closure is found around character index ${this.currentIndex}. html:\n${this.html}`)
-      }
-      if (closedNode !== this.currentNode) {
-        utilsLog.warn(`Did not find closure for node '${this.currentNode.tag}', instead found ${this.regexResult[1]} around character index ${this.currentIndex}. html:\n${this.html}`)
-      }
-      for (let i = this.nodeStack.indexOf(closedNode), length = this.nodeStack.length; i < length; i++) {
-        this.nodeStack.pop();
-      }
-    }
-  }
-
-  private readAttributes(): void {
-    let indexSnapshot: number = this.currentIndex;
-    while (this.exec(attrRegex)) {
-      // One of the groups 2, 3 or 4 may contain a value
-      let attrQuote: AttributeData['quoteType'] = '';
-      let value: string;
-      for (let i = 2; i <= 4; i++) {
-        if (this.regexResult[i]) {
-          value = this.regexResult[i];
-          attrQuote = attrQuotesSorted[i - 2];
-          break;
+  static #parseBindableString(text: string): BindableString[] {
+    const lexingResult = tokenize(bindableStringLexer, text)
+    
+    const response: BindableString[] = []
+    let bindMethod : BindExpressionValue['bindMethod'] = 'escaped';
+    for (const token of lexingResult) {
+      if (token.lexerToken.name === 'startBinding' || token.lexerToken.name === 'endBinding') {
+        bindMethod = token.result.length === 2 ? 'escaped' : 'raw';
+        if (token.lexerToken.name === 'startBinding') {
+          response.push({type: 'bind', text: '', bindMethod});
         }
+        continue;
       }
+      if (bindableStringLexer.modes.freeText.includes(token.lexerToken.name)) {
+        if (response[response.length - 1]?.type !== 'string') {
+          response.push({type: 'string', text: ''});
+        }
+        response[response.length - 1].text += token.result;
+        continue;
+      }
+      if (bindableStringLexer.modes.bound.includes(token.lexerToken.name) || bindableStringLexer.modes.backtick.includes(token.lexerToken.name) || bindableStringLexer.modes.interpolation.includes(token.lexerToken.name)) {
+        if (response[response.length - 1]?.type !== 'bind') {
+          response.push({type: 'bind', text: '', bindMethod});
+        }
+        response[response.length - 1].text += token.result;
+        continue;
+      }
+      throw new Error('Internal compile error: missing how to parse token: ' + token.lexerToken.name)
+    };
 
-      this.currentNode.attributes[this.regexResult[1].toLowerCase()] = {
-        name: this.regexResult[1],
-        value: [{type: 'string', text: value}],
-        quoteType: attrQuote,
-      }
-      if (indexSnapshot === this.currentIndex) {
-        throw new Error(`Internal error. Could not parse html, stuck at index ${indexSnapshot}. html:\n${this.html}`)
-      }
-      indexSnapshot = this.currentIndex;
-    }
+    utilsLog().debug(text, response);
+    return response;
   }
 
-  private exec(regex: RegExp): boolean {
-    regex.lastIndex = this.currentIndex;
-    this.regexResult = regex.exec(this.html);
-    if (!this.regexResult) {
-      return false; // no match
-    } else if (this.currentIndex !== (regex.lastIndex - this.regexResult[0].length)) {
-      // Match had to start at our current index => emulates regex ^
-      this.regexResult = null;
-      return false;
+  static #parseAttribute(attr: Attr): AttributeData {
+    const data: AttributeData = {
+      name: attr.name,
+      quoteType: `"`,
+      value: [],
     }
-    this.currentIndex = regex.lastIndex;
-    return true;
+
+    if (/^(\[.*\])|(\(.*\))|(\[\(.*\)\])$/.test(data.name)) {
+      // Bindable attribute name => take the text as-is
+      data.value = [{type: 'string', text: attr.value}];
+    } else {
+      // Standard attribute name => parse test as bindable
+      data.value = VirtualNodeParser.#parseBindableString(attr.value);
+    }
+
+    return data;
   }
 
   public static parse(html: String | AnyNodeData[]): VirtualNode & VirtualParentNode {
     if (typeof html === 'string') {
       // fallback, need to support for raw html parsing
       // supports less features, but thats fine for the current usecase
-      html = new VirtualNodeParser(html).startParse();
+      html = VirtualNodeParser.htmlToAnyNodeData(html);
     }
     return VirtualNodeParser.parseNodes(html as AnyNodeData[]);
   }
@@ -234,10 +268,6 @@ export class VirtualNodeParser {
     }
 
     return rootNode;
-  }
-
-  public static init() {
-    
   }
 
   private static toRawString(strings: BindableString[]): string {
