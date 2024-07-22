@@ -24,6 +24,6 @@
   "author": "",
   "license": "GPL-3.0-only",
   "devDependencies": {
-    "foundry-vtt-build-tools": "github:TPNils/foundry-vtt-build-tools#v0.1.4"
+    "foundry-vtt-build-tools": "github:TPNils/foundry-vtt-build-tools#v0.1.5"
   }
 }
