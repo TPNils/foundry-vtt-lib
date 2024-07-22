@@ -11,9 +11,9 @@ export class VirtualFragmentNode extends VNode({parent: true}) implements Virtua
   }
 
   public cloneNode(deep?: boolean): this {
-    const clone = new VirtualFragmentNode();
-    clone.startParentClone(this, deep);
-    return clone as this;
+    const clone = new VirtualFragmentNode() as this;
+    this.cloneTo(clone, deep);
+    return clone;
   }
 
   public createDom(): Node {

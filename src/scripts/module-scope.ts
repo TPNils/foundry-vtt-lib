@@ -75,23 +75,23 @@ function getScope(caller: UtilsPackage.Package): ModuleScope {
   return scopes.get(key);
 }
 
-export function utilsCompare(): ModuleScope['utilsCompare'] {
+export function utilsCompare(): typeof UtilsCompare {
   return getScope(UtilsPackage.getCallerPackage()).utilsCompare;
 }
 
-export function utilsFoundry(): ModuleScope['utilsFoundry'] {
+export function utilsFoundry(): typeof UtilsFoundry {
   return getScope(UtilsPackage.getCallerPackage()).utilsFoundry;
 }
 
-export function utilsHooks(): ModuleScope['utilsHooks'] {
+export function utilsHooks(): typeof UtilsHooks {
   return getScope(UtilsPackage.getCallerPackage()).utilsHooks;
 }
 
-export function utilsLibWrapper(): ModuleScope['utilsLibWrapper'] {
+export function utilsLibWrapper(): UtilsLibWrapper {
   return getScope(UtilsPackage.getCallerPackage()).utilsLibWrapper;
 }
 
-export function utilsLog(): ModuleScope['utilsLog'] {
+export function utilsLog(): UtilsLog {
   return getScope(UtilsPackage.getCallerPackage()).utilsLog;
 }
 

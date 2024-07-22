@@ -13,10 +13,9 @@ export class VirtualCommentNode extends VNode({child: true, text: true}) impleme
   }
 
   public cloneNode(deep?: boolean): this {
-    const clone = new VirtualCommentNode();
-    clone.startTextClone(this, deep);
-    clone.startChildClone(this, deep);
-    return clone as this;
+    const clone = new VirtualCommentNode() as this;
+    this.cloneTo(clone, deep);
+    return clone;
   }
 
   public createDom(): Node {

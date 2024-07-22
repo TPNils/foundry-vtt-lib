@@ -14,12 +14,9 @@ export class VirtualHtmlNode extends VNode({attribute: true, child: true, event:
   }
 
   public cloneNode(deep?: boolean): this {
-    const clone = new VirtualHtmlNode(this.#nodeName);
-    clone.startAttributeClone(this, deep);
-    clone.startChildClone(this, deep);
-    clone.startEventClone(this, deep);
-    clone.startParentClone(this, deep);
-    return clone as this;
+    const clone = new VirtualHtmlNode(this.#nodeName) as this;
+    this.cloneTo(clone, deep);
+    return clone;
   }
   
   public createDom(defaultNamespace?: string): Node {
