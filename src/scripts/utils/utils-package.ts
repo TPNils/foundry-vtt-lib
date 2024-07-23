@@ -5,16 +5,14 @@ export namespace UtilsPackage {
   }
 }
 
-const verifiedStack = Symbol('verifiedStack');
-
 export class UtilsPackage {
 
-  public static getCallerPackage(options: {[verifiedStack]?: string} = {}): UtilsPackage.Package {
-    const stack = options?.[verifiedStack] ?? new Error().stack;
+  public static getCallerPackage(options: {who?: UtilsPackage.Who} = {}): UtilsPackage.Package {
+    const stack = new Error().stack;
     // Line 0 = this method
     // Line 1 = the method who wan't to know it's caller
     // Line 2 = the caller
-    const callerLine = stack.split('\n')[2];
+    const callerLine = stack.split('\n')[options.who ?? UtilsPackage.Who.CALLER];
 
     const match = /\/(worlds|systems|modules)\/([^\/]+)/.exec(callerLine);
     if (match) {
@@ -27,10 +25,27 @@ export class UtilsPackage {
   }
 
   public static requireInternalCaller(): void {
-    const caller = UtilsPackage.getCallerPackage({[verifiedStack]: new Error().stack});
-    if (caller.type !== 'module' || caller.id !== 'nils-library') {
-      throw new Error(`Only the module "nils-library" may execute this action. Found: ${caller.type} "${caller.id}"`);
+    const thisModule = UtilsPackage.getUtilsPackageModule();
+    const caller = UtilsPackage.getCallerPackage({who: UtilsPackage.Who.CALLERS_CALLER});
+    if (caller.type !== thisModule.type || caller.id !== thisModule.id) {
+      throw new Error(`Only the ${thisModule.type} "${thisModule.id}" may execute this action. Found: ${caller.type} "${caller.id}"`);
     }
   }
   
+  static #utilsPackageModule: UtilsPackage.Package;
+  public static getUtilsPackageModule(): UtilsPackage.Package {
+    if (UtilsPackage.#utilsPackageModule == null) {
+      UtilsPackage.#utilsPackageModule = UtilsPackage.getCallerPackage({who: UtilsPackage.Who.NILS_LIB});
+    }
+    return UtilsPackage.#utilsPackageModule;
+  }
+  
+}
+export namespace UtilsPackage {
+  export enum Who {
+    NILS_LIB = 0,
+    SELF = 1,
+    CALLER = 2,
+    CALLERS_CALLER = 3,
+  }
 }
