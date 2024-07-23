@@ -1,4 +1,4 @@
-import { utilsLog as UtilsLog } from "../module-scope.js";
+import { utilsLog } from "../module-scope.js";
 
 export interface InputParseOptions {
   executeFunctions?: boolean;
@@ -11,7 +11,6 @@ const prefixesToNamespaces = {
 }
 
 const emptyString = '';
-const utilsLog = UtilsLog();
 export class AttributeParser {
 
   public static attrToNs(attrName: string): {name: string; namespace?: string;} {
@@ -49,7 +48,7 @@ export class AttributeParser {
       }
     }
 
-    utilsLog.error(`Can't serialize type ${typeof value}. Value: `, value);
+    utilsLog().error(`Can't serialize type ${typeof value}. Value: `, value);
     throw new Error(`Can't serialize type ${typeof value}`);
   }
 
@@ -119,7 +118,7 @@ export class AttributeParser {
       value = JSON.parse(value);
     }
     if (options.strict && typeof value !== 'object') {
-      utilsLog.warn('Failed to parse value to an object. Input: ', inputValue)
+      utilsLog().warn('Failed to parse value to an object. Input: ', inputValue)
       return null;
     }
     

@@ -1,8 +1,7 @@
 import { BindableString, AttributeData } from "../../types/html-data.js";
 import { applySecurity, revokeSecurity, SecureOptions } from "../secure.js";
-import { utilsLog as UtilsLog } from "../../module-scope.js";
+import { utilsLog } from "../../module-scope.js";
 
-const utilsLog = UtilsLog();
 class PlaceholderClass implements VirtualBaseNode {}
 type Constructor<I = PlaceholderClass> = new (...args: any[]) => I;
 
@@ -561,99 +560,5 @@ export function VNode(params: NodeParams = {}): Constructor {
   }
   return builderClass;
 }
-
-class SimpleCombinationIterator<T> implements Iterator<Array<T>> {
-  private readonly originalVector: T[];
-  private readonly combinationLength: number;
-  private readonly bitVector: number[];
-  private endIndex = 0;
-
-  public constructor(originalVector: T[], combinationLength: number) {
-    this.originalVector = originalVector;
-    this.combinationLength = combinationLength;
-    this.bitVector = new Array(combinationLength + 1);
-
-    for(let i = 0; i <= this.combinationLength; this.bitVector[i] = i++) {
-    }
-
-    if (originalVector.length > 0) {
-      this.endIndex = 1;
-    }
-  }
-
-  public hasNext(): boolean {
-    return this.endIndex != 0 && this.combinationLength <= this.originalVector.length;
-  }
-
-  public next(): IteratorResult<T[]> {
-    let currentCombination: T[] = [];
-
-    for(let i = 1; i <= this.combinationLength; ++i) {
-      let index = this.bitVector[i] - 1;
-      if (this.originalVector.length > 0) {
-        currentCombination.push(this.originalVector[index]);
-      }
-    }
-
-    this.endIndex = this.combinationLength;
-
-    while(this.bitVector[this.endIndex] == this.originalVector.length - this.combinationLength + this.endIndex) {
-      --this.endIndex;
-      if (this.endIndex == 0) {
-        break;
-      }
-    }
-
-    this.bitVector[this.endIndex] = this.bitVector[this.endIndex]+1;
-
-    for(let i = this.endIndex + 1; i <= this.combinationLength; ++i) {
-      this.bitVector[i] = this.bitVector[i - 1] + 1;
-    }
-
-    return {
-      done: !this.hasNext(),
-      value: currentCombination
-    };
-  }
-}
-
-function generateVNodeContract() {
-  const vnodeContract = [
-    {attrName: 'attribute', returnType: 'VirtualAttributeNode'},
-    {attrName: 'child', returnType: 'VirtualChildNode'},
-    {attrName: 'event', returnType: 'VirtualEventNode'},
-    {attrName: 'parent', returnType: 'VirtualParentNode'},
-    {attrName: 'text', returnType: 'VirtualTextNode'},
-  ];
-
-
-  const lines: string[] = [];
-  for (let i = 1; i <= vnodeContract.length; i++) {
-    const iterator = new SimpleCombinationIterator(vnodeContract, i);
-    for (let results of {[Symbol.iterator]: () => iterator}) {
-      // export function VNode(params: {attribute: true, child: true}): new () => VirtualAttributeNode & VirtualChildNode
-      results.sort((a, b) => a.attrName.localeCompare(b.attrName));
-      const lineParts = ['export function VNode(params: {'];
-      for (const result of results) {
-        lineParts.push(result.attrName, ': true', ', ');
-      }
-      lineParts.splice(lineParts.length - 1, 1);
-      lineParts.push('}): ')
-      for (const result of results) {
-        lineParts.push('ReturnType<typeof ', result.returnType, '>', ' & ');
-      }
-      lineParts.splice(lineParts.length - 1, 1);
-      lines.push(lineParts.join(''));
-    }
-    
-  }
-
-  lines.push(`export function VNode(params?: NodeParams): Constructor`);
-  lines.push(`export function VNode(params: NodeParams = {}): Constructor {`);
-
-  utilsLog.info('generateVNodeContract\n', lines.join('\n'))
-}
-
-// generateVNodeContract();
 //#endregion
 

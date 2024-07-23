@@ -1,4 +1,4 @@
-import { utilsLog as UtilsLog } from "../../module-scope.js";
+import { utilsLog } from "../../module-scope.js";
 import { AttributeParser } from "../attribute-parser.js";
 import { Component } from "../component.js";
 import { rerenderQueue } from "./render-queue.js";
@@ -6,7 +6,6 @@ import { VirtualFragmentNode } from "./virtual-fragment-node.js";
 import { StoredEventCallback, VirtualAttributeNode, VirtualChildNode, VirtualEventNode, VirtualNode, VirtualParentNode } from "./virtual-node.js";
 import { VirtualTextNode } from "./virtual-text-node.js";
 
-const utilsLog = UtilsLog();
 const domEscapeCharactersByCode = new Map<string, string>();
 interface DomAttributeDescribe {
   tag: string;
@@ -502,7 +501,7 @@ export class VirtualNodeRenderer {
                     item.parent.insertBefore(item.node, item.addBefore);
                   }
                 } catch (e) {
-                  utilsLog.error(item, e);
+                  utilsLog().error(item, e);
                 }
                 break;
               }

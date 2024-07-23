@@ -7,6 +7,7 @@ import { VirtualAttributeNode, VirtualNode, VirtualParentNode } from "./virtual-
 import { VirtualNodeParser } from "./virtual-dom/virtual-node-parser.js";
 import { VirtualNodeRenderer } from "./virtual-dom/virtual-node-renderer.js";
 import { cssComponentIdAttr, cssHostIdAttr, scopeCssSelector } from "./css-component-scoper.js";
+import { UtilsPackage } from "../utils/utils-package.js";
 
 //#region Decorators
 const componentConfigSymbol = Symbol('ComponentConfig');
@@ -120,13 +121,14 @@ export function Component(config: ComponentConfig | string): <T extends new (...
         return prefix + scopeCssSelector(selector, internalConfig.tag) + suffix;
       });
       if (cssHeadComment == null) {
-        cssHeadComment = document.createComment('')
+        cssHeadComment = document.createComment(`${UtilsPackage.getCallerPackage({who: UtilsPackage.Who.SELF})} styling`);
+        document.head.appendChild(cssHeadComment);
       }
       const styleElement = document.createElement('style');
-      styleElement.id = 'nils-library-element-' + internalConfig.tag;
+      styleElement.id = `${UtilsPackage.getCallerPackage({who: UtilsPackage.Who.SELF})}-element-` + internalConfig.tag;
       styleElement.innerHTML = internalConfig.style;
       
-      document.head.appendChild(styleElement);
+      cssHeadComment.after(styleElement);
     }
   };
 }
