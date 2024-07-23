@@ -6,14 +6,13 @@ import { rerenderQueue } from "./virtual-dom/render-queue.js";
 import { VirtualAttributeNode, VirtualNode, VirtualParentNode } from "./virtual-dom/virtual-node.js";
 import { VirtualNodeParser } from "./virtual-dom/virtual-node-parser.js";
 import { VirtualNodeRenderer } from "./virtual-dom/virtual-node-renderer.js";
-import { utilsLog } from "../module-scope.js";
-import { scopeCssSelector } from "./css-component-scoper.js";
+import { cssComponentIdAttr, cssHostIdAttr, scopeCssSelector } from "./css-component-scoper.js";
 
 //#region Decorators
 const componentConfigSymbol = Symbol('ComponentConfig');
 const htmlElementSymbol = Symbol('HtmlElement');
-const cssHostIdAttr = `nils-library-hid`;
-const cssComponentIdAttr = `nils-library-cid`;
+
+let cssHeadComment: Comment;
 
 const componentInstanceProxyHandler: ProxyHandler<{[htmlElementSymbol]: ComponentElement}> = {
   set: (target: {[htmlElementSymbol]: ComponentElement}, field: string | symbol, value: any, receiver: any): boolean => {
@@ -103,12 +102,6 @@ export function Component(config: ComponentConfig | string): <T extends new (...
         listenForAttribute.push(attr);
       }
     }
-    
-    if (internalConfig.style) {
-      internalConfig.style = internalConfig.style.replace(/(\s*)([^{}]*)(\s*{)/gs, (full, prefix, selector, suffix) => {
-        return prefix + scopeCssSelector(selector, internalConfig.tag) + suffix;
-      });
-    }
 
     const element = class extends ComponentElement {
       constructor() {
@@ -123,6 +116,12 @@ export function Component(config: ComponentConfig | string): <T extends new (...
 
     customElements.define(internalConfig.tag, element);
     if (internalConfig.style) {
+      internalConfig.style = internalConfig.style.replace(/(\s*)([^{}]*)(\s*{)/gs, (full, prefix, selector, suffix) => {
+        return prefix + scopeCssSelector(selector, internalConfig.tag) + suffix;
+      });
+      if (cssHeadComment == null) {
+        cssHeadComment = document.createComment('')
+      }
       const styleElement = document.createElement('style');
       styleElement.id = 'nils-library-element-' + internalConfig.tag;
       styleElement.innerHTML = internalConfig.style;

@@ -1,13 +1,13 @@
 import { UtilsCompare } from "../../utils/utils-compare.js";
-import { UtilsLog } from "../../utils/utils-log.js";
 import { rerenderQueue } from "../virtual-dom/render-queue.js";
 import { VirtualFragmentNode } from "../virtual-dom/virtual-fragment-node.js";
 import { isVirtualNode, VirtualChildNode, VirtualNode, VirtualParentNode } from "../virtual-dom/virtual-node.js";
 import { VirtualNodeParser } from "../virtual-dom/virtual-node-parser.js";
 import { VirtualNodeRenderer } from "../virtual-dom/virtual-node-renderer.js";
 import { VirtualTextNode } from "../virtual-dom/virtual-text-node.js";
+import { utilsLog as UtilsLog } from "../../module-scope.js";
 
-const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
+const utilsLog = UtilsLog();
 const forAttrRegex = /^\s*let\s+([^\s]+)\s+(of|in)\s([^;]+)(?:;(.*))?$/;
 const forAttrSuffixRegex = /\s*let\s+([^\s]+)\s+=\s([^;]+)/g;
 type PendingNodes<T extends VirtualNode = VirtualNode> = {

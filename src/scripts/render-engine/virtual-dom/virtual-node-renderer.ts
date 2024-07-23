@@ -1,4 +1,4 @@
-import { UtilsLog } from "../../utils/utils-log.js";
+import { utilsLog as UtilsLog } from "../../module-scope.js";
 import { AttributeParser } from "../attribute-parser.js";
 import { Component } from "../component.js";
 import { rerenderQueue } from "./render-queue.js";
@@ -6,7 +6,7 @@ import { VirtualFragmentNode } from "./virtual-fragment-node.js";
 import { StoredEventCallback, VirtualAttributeNode, VirtualChildNode, VirtualEventNode, VirtualNode, VirtualParentNode } from "./virtual-node.js";
 import { VirtualTextNode } from "./virtual-text-node.js";
 
-const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
+const utilsLog = UtilsLog();
 const domEscapeCharactersByCode = new Map<string, string>();
 interface DomAttributeDescribe {
   tag: string;

@@ -1,4 +1,4 @@
-import { UtilsLog } from "../utils/utils-log.js";
+import { utilsLog as UtilsLog } from "../module-scope.js";
 
 export interface InputParseOptions {
   executeFunctions?: boolean;
@@ -11,7 +11,7 @@ const prefixesToNamespaces = {
 }
 
 const emptyString = '';
-const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
+const utilsLog = UtilsLog();
 export class AttributeParser {
 
   public static attrToNs(attrName: string): {name: string; namespace?: string;} {

@@ -1,8 +1,8 @@
 import { BindableString, AttributeData } from "../../types/html-data.js";
-import { UtilsLog } from "../../utils/utils-log.js";
 import { applySecurity, revokeSecurity, SecureOptions } from "../secure.js";
+import { utilsLog as UtilsLog } from "../../module-scope.js";
 
-const utilsLog = new UtilsLog({id: 'nils-library', type: 'module'});
+const utilsLog = UtilsLog();
 class PlaceholderClass implements VirtualBaseNode {}
 type Constructor<I = PlaceholderClass> = new (...args: any[]) => I;
 
