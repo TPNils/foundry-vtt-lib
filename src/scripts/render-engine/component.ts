@@ -6,6 +6,8 @@ import { rerenderQueue } from "./virtual-dom/render-queue.js";
 import { VirtualAttributeNode, VirtualNode, VirtualParentNode } from "./virtual-dom/virtual-node.js";
 import { VirtualNodeParser } from "./virtual-dom/virtual-node-parser.js";
 import { VirtualNodeRenderer } from "./virtual-dom/virtual-node-renderer.js";
+import { utilsLog } from "../module-scope.js";
+import { scopeCssSelector } from "./css-component-scoper.js";
 
 //#region Decorators
 const componentConfigSymbol = Symbol('ComponentConfig');
@@ -100,6 +102,12 @@ export function Component(config: ComponentConfig | string): <T extends new (...
       for (const attr in attrConfigs.byAttribute) {
         listenForAttribute.push(attr);
       }
+    }
+    
+    if (internalConfig.style) {
+      internalConfig.style = internalConfig.style.replace(/(\s*)([^{}]*)(\s*{)/gs, (full, prefix, selector, suffix) => {
+        return prefix + scopeCssSelector(selector, internalConfig.tag) + suffix;
+      });
     }
 
     const element = class extends ComponentElement {
