@@ -569,6 +569,11 @@ export class ComponentElement extends HTMLElement {
           html: this,
           markChanged: () => this.generateHtmlQueue(),
           addStoppable: (...stoppable: Stoppable[]) => {
+            if (!this.isConnected) {
+              for (const stop of stoppable) {
+                stop.stop();
+              }
+            }
             this.unregisters.push(...stoppable);
           }
         });
