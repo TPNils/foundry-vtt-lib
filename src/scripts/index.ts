@@ -1,5 +1,13 @@
 export * from './module-scope.js';
-export * from './types/foundry.js';
-export * from './types/foundry-globals.js';
-export * from './types/html-data.js';
-export * from './types/lib-wrapper.js';
+export type { ComponentConfig, AttributeConfig, EventConfig, OutputConfig, OnInit, OnInitParam } from './render-engine/component.js';
+export type * from './utils/stoppable.js';
+export type * from './utils/utils-compare.js';
+export type * from './utils/utils-foundry.js';
+export type * from './utils/utils-hooks.js';
+export type * from './utils/utils-lib-wrapper.js';
+export type * from './utils/utils-log.js';
+export type * from './utils/utils-regex.js';
+export type * from './types/foundry.js';
+export type * from './types/foundry-globals.js';
+export type * from './types/html-data.js';
+export type * from './types/lib-wrapper.js';
