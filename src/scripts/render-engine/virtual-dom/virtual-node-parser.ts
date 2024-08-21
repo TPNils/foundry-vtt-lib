@@ -129,8 +129,7 @@ export class VirtualNodeParser {
           }
 
           for (const attr of Array.from(process.toParse.attributes)) {
-            const attrData = VirtualNodeParser.#parseAttribute(attr);
-            process.parent.attributes[attrData.name] = attrData;
+            pending.push({parent: element, toParse: attr});
           }
 
           for (const node of Array.from(process.toParse.childNodes)) {
