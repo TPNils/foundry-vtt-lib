@@ -123,7 +123,7 @@ export class VirtualNodeParser {
         } else if (process.toParse instanceof Element) {
           const element: ElementData = {
             type: 'element',
-            tag: process.toParse.tagName,
+            tag: process.toParse.localName,
             attributes: {},
             children: [],
           }
