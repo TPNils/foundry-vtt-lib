@@ -156,10 +156,12 @@ const attributeConfigSymbol = Symbol('AttributeConfigs');
 export interface AttributeConfig {
   name: string;
   dataType?: 'string' | 'number' | 'boolean' | 'object';
+  closest?: boolean;
 }
 interface AttributeConfigInternal {
   attribute: string;
-  dataType?: AttributeConfig['dataType'];
+  dataType: AttributeConfig['dataType'];
+  closest: AttributeConfig['closest'];
   propertyKey: string;
   descriptor?: PropertyDescriptor;
 }
@@ -184,6 +186,7 @@ export function Attribute(config?: AttributeConfig | string) {
     const internalConfig: AttributeConfigInternal = {
       attribute: (config as AttributeConfig).name,
       dataType: (config as AttributeConfig).dataType ?? 'string',
+      closest: (config as AttributeConfig).closest ?? false,
       propertyKey: propertyKey,
       descriptor: descriptor,
     }
@@ -536,6 +539,45 @@ export class BaseComponentElement extends HTMLElement {
       this.setControllerFromAttribute(attr, this.getAttribute(attr));
     }
   }
+
+  private listenForClosest(): void {
+    const closestAttributes: AttributeConfigInternal[] = [];
+    for (const attributes of Object.values(this.getAttributeConfigs().byAttribute)) {
+      for (const attr of attributes) {
+        if (attr.closest) {
+          closestAttributes.push(attr);
+        }
+      }
+    }
+
+    if (closestAttributes.length === 0) {
+      return;
+    }
+
+    const observer = new MutationObserver((mutationList) => {
+      for (const mutation of mutationList) {
+        if (mutation.type !== 'attributes') {
+          continue;
+        }
+        if (!mutation.attributeName) {
+          continue;
+        }
+
+        this.setControllerFromAttribute(mutation.attributeName, this.closest(`[${mutation.attributeName}]`)?.getAttribute(mutation.attributeName));
+      }
+    });
+    this.unregisters.push({stop: () => observer.disconnect()})
+
+    let traverseElement: HTMLElement | null = this;
+    while (traverseElement != null) {
+      observer.observe(traverseElement, { childList: false, subtree: false, attributeFilter: closestAttributes.map(attr => attr.attribute) });
+      traverseElement = traverseElement.parentElement;
+    }
+    
+    for (const attr of closestAttributes) {
+      this.setControllerFromAttribute(attr.attribute, this.closest(`[${attr.attribute}]`)?.getAttribute(attr.attribute));
+    }
+  }
   //#endregion
 
   //#region DOM listeners
@@ -587,6 +629,7 @@ export class BaseComponentElement extends HTMLElement {
    */
   public connectedCallback(): void {
     this.readAllAttributes();
+    this.listenForClosest();
   }
 
   /**
