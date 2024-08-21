@@ -98,6 +98,8 @@ export function utilsLog(): UtilsLog {
 export function Component(...args: Parameters<typeof C.Component>): ReturnType<typeof C.Component> {
   return getScope(UtilsPackage.getCallerPackage()).component(...args);
 }
+Component.getTag = C.Component.getTag;
+Component.isComponentElement = C.Component.isComponentElement;
 
 export function Attribute(...args: Parameters<typeof C.Attribute>): ReturnType<typeof C.Attribute> {
   return getScope(UtilsPackage.getCallerPackage()).attribute(...args);
