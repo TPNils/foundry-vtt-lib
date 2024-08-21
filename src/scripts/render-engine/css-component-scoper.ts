@@ -114,7 +114,7 @@ export function scopeCssSelector(selector: string, htmlTag: string): string {
         let adjustedRules: typeof rules = [];
         for (let i = 0; i < rules.length; i++) {
           const rule = rules[i];
-          const hostContextPseudo = rule.items?.find(i => i.type === 'PseudoClass' && i.argument.type === 'Selector' && i.name === 'host-context') as AstPseudoClass & {argument: AstSelector};
+          const hostContextPseudo = rule.items?.find(i => i.type === 'PseudoClass' && i.argument?.type === 'Selector' && i.name === 'host-context') as AstPseudoClass & {argument: AstSelector};
           if (!hostContextPseudo) {
             adjustedRules.push(rule); // Don't change
             continue;
