@@ -1,5 +1,5 @@
 import { UtilsHooks } from "../utils/utils-hooks";
-import { ComponentElement } from "./component";
+import { BaseComponentElement } from "./component";
 
 const attrName = `data-nils-library-tag-replacer`;
 function registerHooks(): void {
@@ -36,7 +36,7 @@ function injectCustomElement(addedNode: Element): void {
     const tagReplacer = node.getAttribute(attrName);
     const elementConstructor = customElements.get(tagReplacer);
     let constructorIter = elementConstructor;
-    while (constructorIter !== ComponentElement && constructorIter != null) {
+    while (constructorIter !== BaseComponentElement && constructorIter != null) {
       constructorIter = Object.getPrototypeOf(constructorIter);
     }
 

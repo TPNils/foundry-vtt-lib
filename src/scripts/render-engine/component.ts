@@ -28,6 +28,8 @@ export interface ComponentConfig {
   tag: string;
   html?: string | AnyNodeData[];
   style?: string;
+  cssStyleSheet?: CSSStyleSheet;
+  useShadowDom?: boolean;
 }
 interface ComponentConfigInternal extends ComponentConfig {
   parsedHtml?: VirtualNode & VirtualParentNode;
@@ -62,7 +64,7 @@ export function Component(config: ComponentConfig | string): <T extends new (...
           if (process.nodeName === 'SLOT') {
             internalConfig.hasHtmlSlots = true;
           }
-          if (process.isAttributeNode()) {
+          if (process.isAttributeNode() && !internalConfig.useShadowDom) {
             process.setAttribute(cssComponentIdAttr, internalConfig.tag);
           }
           if (process.isParentNode()) {
@@ -72,6 +74,29 @@ export function Component(config: ComponentConfig | string): <T extends new (...
           }
         }
       }
+    }
+    // Scope css
+    if (internalConfig.style && !internalConfig.useShadowDom) {
+      internalConfig.style = internalConfig.style.replace(/(\s*)([^{}]*)(\s*{)/gs, (full, prefix, selector, suffix) => {
+        return prefix + scopeCssSelector(selector, internalConfig.tag) + suffix;
+      });
+    }
+    // Compile to style sheet
+    if (internalConfig.style) {
+      internalConfig.cssStyleSheet = new CSSStyleSheet();
+      internalConfig.cssStyleSheet.replaceSync(internalConfig.style);
+    }
+    // Add global css
+    if (internalConfig.style && !internalConfig.useShadowDom) {
+      if (cssHeadComment == null) {
+        cssHeadComment = document.createComment(`${UtilsPackage.getCallerPackage({who: UtilsPackage.Who.SELF})} styling`);
+        document.head.appendChild(cssHeadComment);
+      }
+      const styleElement = document.createElement('style');
+      styleElement.id = `${UtilsPackage.getCallerPackage({who: UtilsPackage.Who.SELF})}-element-` + internalConfig.tag;
+      styleElement.innerHTML = internalConfig.style;
+      
+      cssHeadComment.after(styleElement);
     }
 
     if (constructor.prototype[attributeConfigSymbol] == null) {
@@ -104,7 +129,9 @@ export function Component(config: ComponentConfig | string): <T extends new (...
       }
     }
 
-    const element = class extends ComponentElement {
+    const baseClass: typeof BaseComponentElement = internalConfig.useShadowDom ? ShadowComponentElement : ComponentElement;
+
+    const element = class extends baseClass {
       constructor() {
         super()
         this.controller = new Proxy(new constructor(), componentInstanceProxyHandler);
@@ -116,24 +143,10 @@ export function Component(config: ComponentConfig | string): <T extends new (...
     };
 
     customElements.define(internalConfig.tag, element);
-    if (internalConfig.style) {
-      internalConfig.style = internalConfig.style.replace(/(\s*)([^{}]*)(\s*{)/gs, (full, prefix, selector, suffix) => {
-        return prefix + scopeCssSelector(selector, internalConfig.tag) + suffix;
-      });
-      if (cssHeadComment == null) {
-        cssHeadComment = document.createComment(`${UtilsPackage.getCallerPackage({who: UtilsPackage.Who.SELF})} styling`);
-        document.head.appendChild(cssHeadComment);
-      }
-      const styleElement = document.createElement('style');
-      styleElement.id = `${UtilsPackage.getCallerPackage({who: UtilsPackage.Who.SELF})}-element-` + internalConfig.tag;
-      styleElement.innerHTML = internalConfig.style;
-      
-      cssHeadComment.after(styleElement);
-    }
   };
 }
-Component.isComponentElement = (element: any): element is ComponentElement => {
-  return element instanceof ComponentElement;
+Component.isComponentElement = (element: any): element is BaseComponentElement => {
+  return element instanceof BaseComponentElement;
 }
 Component.getTag = (constructor: new (...args: any) => any): string | null => {
   return (constructor.prototype[componentConfigSymbol] as ComponentConfigInternal)?.tag;
@@ -391,47 +404,55 @@ export interface OnInit {
 }
 
 export interface OnInitParam {
-  html: ComponentElement,
+  html: Node & ParentNode,
   markChanged: () => void;
   addStoppable(...stoppable: Stoppable[]): void;
+}
+
+function isOnInit(value: any): value is OnInit {
+  return typeof value === 'object' && typeof value.onInit === 'function';
 }
 
 const deepUpdateOptions = {deepUpdate: true};
 const deepSyncUpdateOptions: {sync: true, deepUpdate: true} = {sync: true, deepUpdate: true};
 
-export class ComponentElement extends HTMLElement {
+export class BaseComponentElement extends HTMLElement {
+
   #controller: object
   protected get controller(): object {
     return this.#controller;
   }
   protected set controller(value: object) {
+    const oldController = this.#controller;
     if (this.#controller) {
       delete this.#controller[htmlElementSymbol];
     }
     this.#controller = value;
     this.#controller[htmlElementSymbol] = this;
+    if (this.#controller !== oldController) {
+      this.onPostControllerChange(oldController);
+    }
   }
 
-  public getHostAttribute(): string {
-    return cssHostIdAttr;
-  }
-
-  private getComponentConfig(): ComponentConfigInternal {
+  //#region configs
+  protected getComponentConfig(): ComponentConfigInternal {
     return this.#controller.constructor.prototype[componentConfigSymbol];
   }
 
-  private getAttributeConfigs(): AttributeConfigsInternal {
+  protected getAttributeConfigs(): AttributeConfigsInternal {
     return this.#controller.constructor.prototype[attributeConfigSymbol];
   }
 
-  private getEventConfigs(): EventConfigsInternal {
+  protected getEventConfigs(): EventConfigsInternal {
     return this.#controller.constructor.prototype[eventConfigSymbol];
   }
 
-  private getOutputConfigs(): OutputConfigsInternal {
+  protected getOutputConfigs(): OutputConfigsInternal {
     return this.#controller.constructor.prototype[outputConfigSymbol];
   }
+  //#endregion
 
+  //#region attributes
   /**
    * Invoked each time one of the custom element's attributes is added, removed, or changed. Which attributes to notice change for is specified in a static get 
    */
@@ -468,7 +489,7 @@ export class ComponentElement extends HTMLElement {
   /**
    * @returns if the controller is listening to changes of that attribute
    */
-  private setControllerFromAttribute(name: string, value: any): boolean {
+  protected setControllerFromAttribute(name: string, value: any): boolean {
     name = name.toLowerCase();
     const attrConfigs = this.getAttributeConfigs();
     if (attrConfigs.byAttribute[name]) {
@@ -506,6 +527,108 @@ export class ComponentElement extends HTMLElement {
   }
 
   /**
+   * attributeChangedCallback is only called when it's part of the dom
+   * Read attributes on init
+   * https://web.dev/custom-elements-best-practices/
+   */
+  private readAllAttributes(): void {
+    for (const attr of this.getAttributeNames()) {
+      this.setControllerFromAttribute(attr, this.getAttribute(attr));
+    }
+  }
+  //#endregion
+
+  //#region DOM listeners
+  private listenersRegistered = false;
+  protected unregisters: Stoppable[] = [];
+  protected registerEventListeners(shadowRoot?: ShadowRoot) {
+    if (this.listenersRegistered) {
+      return;
+    }
+    this.listenersRegistered = true;
+    const eventConfigs = this.getEventConfigs();
+    for (const configs of Object.values(eventConfigs.byEventName)) {
+      for (const config of configs) {
+        const listener: EventListenerOrEventListenerObject = event => {
+          this.controller[config.propertyKey](event);
+        }
+        if (config.eventName.toLowerCase().startsWith('window:')) {
+          window.addEventListener(config.eventName.substring(7), listener);
+          this.unregisters.push({stop: () => window.removeEventListener(config.eventName.substring(7), listener)});
+        } else if (config.eventName.toLowerCase().startsWith('document:')) {
+          document.addEventListener(config.eventName.substring(9), listener);
+          this.unregisters.push({stop: () => document.removeEventListener(config.eventName.substring(9), listener)});
+        } else if (config.eventName.toLowerCase().startsWith('body:')) {
+          document.body.addEventListener(config.eventName.substring(5), listener);
+          this.unregisters.push({stop: () => document.body.removeEventListener(config.eventName.substring(5), listener)});
+        } else {
+          const element = shadowRoot ?? this;
+          element.addEventListener(config.eventName, listener);
+          this.unregisters.push({stop: () => element.removeEventListener(config.eventName, listener)});
+        }
+      }
+    }
+  }
+
+  private unregisterEventListeners() {
+    for (const unregister of this.unregisters) {
+      unregister.stop();
+    }
+    this.unregisters = [];
+    this.listenersRegistered = false;
+  }
+  //#endregion
+
+  //#region custom element callbacks
+
+  /**
+   * Invoked each time the custom element is appended into a document-connected element.
+   * This will happen each time the node is moved, and may happen before the element's contents have been fully parsed. 
+   */
+  public connectedCallback(): void {
+    this.readAllAttributes();
+  }
+
+  /**
+   * Invoked each time the custom element is moved to a new document.
+   */
+  public adoptedCallback(): void {
+  }
+
+  /**
+   * Invoked each time the custom element is disconnected from the document's DOM.
+   */
+  public disconnectedCallback(): void {
+    this.unregisterEventListeners();
+  }
+  //#endregion
+
+  //#region internal events
+
+  /**
+   * Called after the new controller has been assigned
+   */
+  protected onPostControllerChange(oldController: object | undefined): void {
+  }
+  //#endregion
+}
+
+class ShadowComponentElement extends BaseComponentElement {
+
+  #shadowRoot: ShadowRoot;
+  constructor() {
+    super();
+    this.#shadowRoot = this.attachShadow({mode: 'closed'});
+  }
+
+  protected onPostControllerChange(oldController: object): void {
+    const css = this.getComponentConfig().cssStyleSheet;
+    if (css) {
+      this.#shadowRoot.adoptedStyleSheets = [css];
+    }
+  }
+
+  /**
    * Mark this element as changed
    */
   public onChange(): void {
@@ -519,11 +642,101 @@ export class ComponentElement extends HTMLElement {
    * This will happen each time the node is moved, and may happen before the element's contents have been fully parsed. 
    */
   public connectedCallback(): void {
-    this.readAllAttributes();
-    const hostAttr = this.getHostAttribute();
-    if (!this.hasAttribute(hostAttr)) {
-      this.setAttribute(hostAttr, this.getComponentConfig().tag);
+    super.connectedCallback();
+
+    this.generateHtmlQueue().then(() => {
+      this.registerEventListeners(this.#shadowRoot);
+      if (isOnInit(this.controller)) {
+        this.controller.onInit({
+          html: this.#shadowRoot,
+          markChanged: () => this.generateHtmlQueue(),
+          addStoppable: (...stoppable: Stoppable[]) => {
+            if (!this.isConnected) {
+              for (const stop of stoppable) {
+                stop.stop();
+              }
+            }
+            this.unregisters.push(...stoppable);
+          }
+        });
+      }
+    });
+  }
+
+  private template: Template;
+  private templateRenderResult: VirtualNode & VirtualParentNode;
+  private generateHtmlExec = async (): Promise<void> =>  {
+    if (this.template === undefined) {
+      const parsedHtml = this.getComponentConfig().parsedHtml;
+      if (!parsedHtml) {
+        this.template = null;
+      } else {
+        this.template = new Template(this.nodeName, parsedHtml, this.controller);
+        this.templateRenderResult = this.template.render({sync: true});
+        const rootNodes = VirtualNodeRenderer.renderDom(this.templateRenderResult, deepSyncUpdateOptions);
+        this.setInnerNode(rootNodes);
+      }
+    } else if (this.template !== null) {
+      this.templateRenderResult = await this.template.render({force: true});
+      const rootNodes = await VirtualNodeRenderer.renderDom(this.templateRenderResult, deepUpdateOptions);
+      this.setInnerNode(rootNodes);
     }
+  }
+
+  private setInnerNode(rootNodes: Node[]) {
+    if (rootNodes.length === 0) {
+      return;
+    }
+
+    if (rootNodes[0].parentNode !== this) {
+      if (rootNodes[0].parentNode != null) {
+        rootNodes[0].parentNode.removeChild(rootNodes[0]);
+      }
+      this.#shadowRoot.prepend(rootNodes[0]);
+    }
+
+    for (let i = 1; i < rootNodes.length; i++) {
+      const node = rootNodes[i];
+      if (node.parentNode != null) {
+        node.parentNode.removeChild(node);
+      }
+      (rootNodes[i-1] as ChildNode).after(rootNodes[i]);
+    }
+
+  }
+
+  private generateHtmlQueue(): Promise<void> {
+    return rerenderQueue.add(this.generateHtmlExec);
+  }
+
+}
+
+class ComponentElement extends BaseComponentElement {
+
+  protected onPostControllerChange(oldController: object): void {
+    super.onPostControllerChange(oldController);
+    if (this.isConnected) {
+      // Operation not permitted in constructor => will also do this on connect
+      this.setAttribute(cssHostIdAttr, this.getComponentConfig().tag);
+    }
+  }
+
+  /**
+   * Mark this element as changed
+   */
+  public onChange(): void {
+    if (this.isConnected) {
+      this.generateHtmlQueue();
+    }
+  }
+
+  /**
+   * Invoked each time the custom element is appended into a document-connected element.
+   * This will happen each time the node is moved, and may happen before the element's contents have been fully parsed. 
+   */
+  public connectedCallback(): void {
+    super.connectedCallback();
+    this.setAttribute(cssHostIdAttr, this.getComponentConfig().tag);
 
     if (this.getComponentConfig().hasHtmlSlots) {
       // Create an observer instance linked to the callback function
@@ -564,8 +777,8 @@ export class ComponentElement extends HTMLElement {
 
     this.generateHtmlQueue().then(() => {
       this.registerEventListeners();
-      if (ComponentElement.isOnInit(this.#controller)) {
-        this.#controller.onInit({
+      if (isOnInit(this.controller)) {
+        this.controller.onInit({
           html: this,
           markChanged: () => this.generateHtmlQueue(),
           addStoppable: (...stoppable: Stoppable[]) => {
@@ -581,65 +794,6 @@ export class ComponentElement extends HTMLElement {
     });
   }
 
-  /**
-   * attributeChangedCallback is only called when it's part of the dom
-   * Read attributes on init
-   * https://web.dev/custom-elements-best-practices/
-   */
-  private readAllAttributes(): void {
-    for (const attr of this.getAttributeNames()) {
-      this.setControllerFromAttribute(attr, this.getAttribute(attr));
-    }
-  }
-
-  /**
-   * Invoked each time the custom element is disconnected from the document's DOM.
-   */
-  public disconnectedCallback(): void {
-    this.unregisterEventListeners();
-  }
-
-  /**
-   * Invoked each time the custom element is moved to a new document.
-   */
-  public adoptedCallback(): void {
-  }
-
-  private listenersRegistered = false;
-  private unregisters: Stoppable[] = [];
-  private registerEventListeners() {
-    if (this.listenersRegistered) {
-      return;
-    }
-    this.listenersRegistered = true;
-    const eventConfigs = this.getEventConfigs();
-    for (const configs of Object.values(eventConfigs.byEventName)) {
-      for (const config of configs) {
-        const listener: EventListenerOrEventListenerObject = event => {
-          this.#controller[config.propertyKey](event);
-        }
-        if (config.eventName.toLowerCase().startsWith('window:')) {
-          window.addEventListener(config.eventName.substring(7), listener);
-        } else if (config.eventName.toLowerCase().startsWith('document:')) {
-          document.addEventListener(config.eventName.substring(9), listener);
-        } else if (config.eventName.toLowerCase().startsWith('body:')) {
-          document.addEventListener(config.eventName.substring(5), listener);
-        } else {
-          this.addEventListener(config.eventName, listener);
-        }
-        this.unregisters.push({stop: () => this.removeEventListener(config.eventName, listener)});
-      }
-    }
-  }
-
-  private unregisterEventListeners() {
-    for (const unregister of this.unregisters) {
-      unregister.stop();
-    }
-    this.unregisters = [];
-    this.listenersRegistered = false;
-  }
-
   private template: Template;
   private templateRenderResult: VirtualNode & VirtualParentNode;
   private generateHtmlExec = async (): Promise<void> =>  {
@@ -648,7 +802,7 @@ export class ComponentElement extends HTMLElement {
       if (!parsedHtml) {
         this.template = null;
       } else {
-        this.template = new Template(this.nodeName, parsedHtml, this.#controller);
+        this.template = new Template(this.nodeName, parsedHtml, this.controller);
         this.templateRenderResult = this.template.render({sync: true});
         const rootNodes = VirtualNodeRenderer.renderDom(this.templateRenderResult, deepSyncUpdateOptions);
         this.findSlots();
@@ -822,10 +976,6 @@ export class ComponentElement extends HTMLElement {
         }
       }
     }
-  }
-
-  private static isOnInit(value: any): value is OnInit {
-    return typeof value === 'object' && typeof value.onInit === 'function';
   }
 
 }
