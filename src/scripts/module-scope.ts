@@ -58,9 +58,9 @@ class ModuleScope {
       }
       return C.Component(config);
     }
-    this.attribute = Attribute;
-    this.bindEvent = BindEvent;
-    this.output = Output;
+    this.attribute = C.Attribute;
+    this.bindEvent = C.BindEvent;
+    this.output = C.Output;
   }
 
 }
