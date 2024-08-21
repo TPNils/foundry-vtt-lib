@@ -33,8 +33,8 @@ const cssParser = createParser({
   substitutes: true
 });
 
-export const cssHostIdAttr = `nils-library-hid`;
-export const cssComponentIdAttr = `nils-library-cid`;
+export const cssHostIdAttr = `nlib-hid`;
+export const cssComponentIdAttr = `nlib-cid`;
 
 export function scopeCssSelector(selector: string, htmlTag: string): string {
   try {
