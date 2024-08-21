@@ -12,7 +12,7 @@ export class VirtualTextNode extends VNode({child: true, text: true}) implements
     return '#text';
   }
 
-  public cloneNode(deep?: boolean): typeof this {
+  public cloneNode(deep?: boolean): this {
     const clone = new VirtualTextNode() as this;
     this.cloneTo(clone, deep);
     return clone;
