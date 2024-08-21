@@ -29,16 +29,15 @@ export interface ComponentConfig {
   html?: string | AnyNodeData[];
   style?: string;
   cssStyleSheet?: CSSStyleSheet;
-  useShadowDom?: boolean;
+  useShadowDom?: ShadowRootInit | ShadowRootMode;
 }
-interface ComponentConfigInternal extends ComponentConfig {
+interface ComponentConfigInternal extends Omit<ComponentConfig, 'useShadowDom'> {
   parsedHtml?: VirtualNode & VirtualParentNode;
   hasHtmlSlots: boolean;
+  useShadowDom?: ShadowRootInit,
 }
-export function Component(config: ComponentConfig | string): <T extends new (...args: any[]) => {}>(constructor: T) => void {
-  if (typeof config === 'string') {
-    config = {tag: config};
-  }
+export function Component(inputConfig: ComponentConfig | string): <T extends new (...args: any[]) => {}>(constructor: T) => void {
+  const config = typeof inputConfig === 'string' ? {tag: inputConfig} : inputConfig;
 
   if (!config.tag.includes('-')) {
     throw new Error(`custom components need to have a dash included in their name
@@ -47,8 +46,9 @@ export function Component(config: ComponentConfig | string): <T extends new (...
 
   return function<T extends { new (...args: any[]): {} }>(constructor: T) {
     const internalConfig: ComponentConfigInternal = {
-      ...config as ComponentConfig,
+      ...config,
       hasHtmlSlots: false,
+      useShadowDom: typeof config.useShadowDom === 'string' ? {mode: config.useShadowDom} : config.useShadowDom,
     }
 
     internalConfig.tag = internalConfig.tag.toLowerCase();
@@ -573,7 +573,7 @@ export class BaseComponentElement extends HTMLElement {
       observer.observe(traverseElement, { childList: false, subtree: false, attributeFilter: closestAttributes.map(attr => attr.attribute) });
       traverseElement = traverseElement.parentElement;
     }
-    
+
     for (const attr of closestAttributes) {
       this.setControllerFromAttribute(attr.attribute, this.closest(`[${attr.attribute}]`)?.getAttribute(attr.attribute));
     }
@@ -661,13 +661,12 @@ class ShadowComponentElement extends BaseComponentElement {
   #shadowRoot: ShadowRoot;
   constructor() {
     super();
-    this.#shadowRoot = this.attachShadow({mode: 'closed'});
   }
 
   protected onPostControllerChange(oldController: object): void {
-    const css = this.getComponentConfig().cssStyleSheet;
-    if (css) {
-      this.#shadowRoot.adoptedStyleSheets = [css];
+    this.#shadowRoot = this.attachShadow(this.getComponentConfig().useShadowDom!);
+    if (this.getComponentConfig().cssStyleSheet) {
+      this.#shadowRoot.adoptedStyleSheets = [this.getComponentConfig().cssStyleSheet];
     }
   }
 
