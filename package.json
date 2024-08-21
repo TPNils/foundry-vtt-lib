@@ -1,6 +1,6 @@
 {
   "name": "nils-library",
-  "version": "0.0.0",
+  "version": "v0.1.0",
   "type": "module",
   "scripts": {
     "build": "foundry-vtt-build-tools build",

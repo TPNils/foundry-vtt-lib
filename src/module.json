@@ -1,7 +1,7 @@
 {
   "id": "nils-library",
   "title": "Nils' Library",
-  "version": "0.0.0",
+  "version": "v0.1.0",
   "compatibility": {
     "minimum": "11",
     "verified": "12"
@@ -12,15 +12,19 @@
       "name": "TPNils"
     }
   ],
-  "url": "",
-  "manifest": "",
-  "download": "",
+  "url": "https://github.com/TPNils/foundry-vtt-lib",
+  "manifest": "https://github.com/TPNils/foundry-vtt-lib/releases/download/v0.1.0/module.json",
+  "download": "https://github.com/TPNils/foundry-vtt-lib/releases/download/v0.1.0/module.zip",
   "bugs": "",
+  "flags": {
+    "hbsFiles": []
+  },
   "esmodules": [
     "scripts/utils/utils-hooks.js",
     "scripts/utils/utils-lib-wrapper.js",
     "scripts/render-engine/component-foundry-connector.js"
   ],
+  "styles": [],
   "languages": [],
   "relationships": {
     "requires": [],
