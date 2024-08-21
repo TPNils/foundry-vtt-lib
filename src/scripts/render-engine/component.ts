@@ -289,16 +289,16 @@ export function BindEvent(config: EventConfig | string) {
 const fromAttrChangeSymbol = Symbol('fromAttrChange');
 const outputConfigSymbol = Symbol('OutputConfig');
 export interface OutputConfig {
-  eventName?: string;
+  eventName?: OutputConfigInternal['eventName'];
   /* default: false */
-  bubbles?: boolean;
+  bubbles?: OutputConfigInternal['bubbles'];
   /* default: false. Won't emit if the last emit was the same. If it's a function, return true of the values are the same */
-  deduplicate?: boolean | ((oldValue: any, newValue: any) => boolean);
+  deduplicate?: OutputConfigInternal['deduplicate'];
 }
 interface OutputConfigInternal {
-  eventName: OutputConfig['eventName'];
-  bubbles: OutputConfig['bubbles'];
-  deduplicate: OutputConfig['deduplicate'];
+  eventName: string;
+  bubbles: boolean;
+  deduplicate: boolean | ((oldValue: any, newValue: any) => boolean);
 }
 interface OutputConfigsInternal {
   byEventName: {[attr: string]: OutputConfigInternal[]};
@@ -319,10 +319,10 @@ export function Output(config?: string | OutputConfig) {
     }
 
     // Add to configs list
-    if (targetPrototype[outputConfigSymbol].byEventName[internalConfig.eventName] == null) {
-      targetPrototype[outputConfigSymbol].byEventName[internalConfig.eventName] = [];
+    if (targetPrototype[outputConfigSymbol].byEventName[internalConfig.eventName!] == null) {
+      targetPrototype[outputConfigSymbol].byEventName[internalConfig.eventName!] = [];
     }
-    targetPrototype[outputConfigSymbol].byEventName[internalConfig.eventName].push(internalConfig);
+    targetPrototype[outputConfigSymbol].byEventName[internalConfig.eventName!].push(internalConfig);
     
     if (targetPrototype[outputConfigSymbol].byProperty[propertyKey] == null) {
       targetPrototype[outputConfigSymbol].byProperty[propertyKey] = [];
@@ -332,7 +332,7 @@ export function Output(config?: string | OutputConfig) {
     // Apply output emitters
     if (typeof config === 'string') {
       internalConfig.eventName = config;
-    } else {
+    } else if (config != null) {
       if (config.eventName != null) {
         internalConfig.eventName = config.eventName;
       }
@@ -514,8 +514,8 @@ export class BaseComponentElement extends HTMLElement {
           }
         }
         if (this.getOutputConfigs().byProperty[config.propertyKey]) {
-          const descriptor = Reflect.getOwnPropertyDescriptor(Reflect.getPrototypeOf(this.#controller), config.propertyKey);
-          descriptor.set.call(this.#controller, normalizedValue, fromAttrChangeSymbol);
+          const descriptor = Reflect.getOwnPropertyDescriptor(Reflect.getPrototypeOf(this.#controller)!, config.propertyKey);
+          descriptor!.set!.call(this.#controller, normalizedValue, fromAttrChangeSymbol);
           //this.#controller[config.propertyKey] = normalizedValue;
         } else {
           this.#controller[config.propertyKey] = normalizedValue;
@@ -851,8 +851,8 @@ class ComponentElement extends BaseComponentElement {
     }
     const deleteKeys = new Set<string>();
     for (const slotName of this.elementsBySlotName.keys()) {
-      const filteredNodes = [];
-      for (const node of this.elementsBySlotName.get(slotName)) {
+      const filteredNodes: Array<VirtualNode & VirtualAttributeNode> = [];
+      for (const node of this.elementsBySlotName.get(slotName)!) {
         if (this.templateRenderResult.contains(node)) {
           filteredNodes.push(node);
         }
@@ -880,8 +880,8 @@ class ComponentElement extends BaseComponentElement {
           if (!this.elementsBySlotName.has(slotName)) {
             this.elementsBySlotName.set(slotName, []);
           }
-          if (!this.elementsBySlotName.get(slotName).includes(process)) {
-            this.elementsBySlotName.get(slotName).push(process);
+          if (!this.elementsBySlotName.get(slotName)!.includes(process)) {
+            this.elementsBySlotName.get(slotName)!.push(process);
           }
         }
         if (process.isParentNode()) {
@@ -908,7 +908,7 @@ class ComponentElement extends BaseComponentElement {
     // Check if the target slots still match
     for (const slotName of this.slotsToReplacements.keys()) {
       const filteredElements: Element[] = [];
-      for (const elem of this.slotsToReplacements.get(slotName).elements) {
+      for (const elem of this.slotsToReplacements.get(slotName)!.elements) {
         const slotAttr = elem.getAttribute('slot') ?? elem.getAttribute('data-slot');
         if (slotAttr === slotName && this.elementsBySlotName.has(slotName)) {
           filteredElements.push(elem);
