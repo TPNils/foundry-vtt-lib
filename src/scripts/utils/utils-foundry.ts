@@ -57,10 +57,18 @@ export class UtilsFoundry {
       return UtilsHooks.init().then(() => UtilsFoundry.getGameVersion({async: false}));
     }
     let version: string;
+    // @ts-ignore
     if (typeof game.version === 'string') {
+      // @ts-ignore
       version = game.version
+      // @ts-ignore
     } else if (typeof game.data?.version === 'string') {
+      // @ts-ignore
       version = game.data?.version;
+      // @ts-ignore
+    } else if (typeof game.data?.release === 'object' && game.data?.release != null) {
+      // @ts-ignore
+      return new Version(game.data?.release.generation, game.data?.release.build);
     }
     if (!version) {
       let hasInitTriggered = false;
