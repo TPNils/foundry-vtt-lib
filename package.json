@@ -23,7 +23,7 @@
   "author": "",
   "license": "GPL-3.0-only",
   "devDependencies": {
-    "foundry-vtt-build-tools": "github:TPNils/foundry-vtt-build-tools#8e7102cd0cf2a1038595ccb0758d6ecec134b537"
+    "foundry-vtt-build-tools": "github:TPNils/foundry-vtt-build-tools#1da6a5b34e64e3a3572c99f4d0e752883474e2fd"
   },
   "dependencies": {
     "css-selector-parser": "^3.0.5"
