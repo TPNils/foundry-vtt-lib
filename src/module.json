@@ -1,7 +1,7 @@
 {
   "id": "nils-library",
   "title": "Nils' Library",
-  "version": "v0.1.0",
+  "version": "v0.1.1",
   "compatibility": {
     "minimum": "11",
     "verified": "12"
@@ -13,8 +13,8 @@
     }
   ],
   "url": "https://github.com/TPNils/foundry-vtt-lib",
-  "manifest": "https://github.com/TPNils/foundry-vtt-lib/releases/download/v0.1.0/module.json",
-  "download": "https://github.com/TPNils/foundry-vtt-lib/releases/download/v0.1.0/module.zip",
+  "manifest": "https://github.com/TPNils/foundry-vtt-lib/releases/download/v0.1.1/module.json",
+  "download": "https://github.com/TPNils/foundry-vtt-lib/releases/download/v0.1.1/module.zip",
   "bugs": "",
   "flags": {
     "hbsFiles": []
