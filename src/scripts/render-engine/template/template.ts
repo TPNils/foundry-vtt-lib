@@ -500,7 +500,7 @@ export class Template {
         const exprFunc = Function(...paramNames, `return ${expression}`).bind(this.#context);
 
         alreadyParsedExpression = {
-          localVars: localVars == null ? {} : deepClone(localVars),
+          localVars: localVars == null ? {} : foundry.utils.deepClone(localVars),
           exec: (event: Event) => {
             return exprFunc(event, ...paramValues);
           }

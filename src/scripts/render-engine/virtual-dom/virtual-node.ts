@@ -467,7 +467,7 @@ function VirtualTextNode<T extends Constructor>(clazz: T = PlaceholderClass as a
       return toRawString(this.#data);
     }
     public getTextData(): ReadonlyArray<Readonly<BindableString>> {
-      return deepClone(this.#data);
+      return foundry.utils.deepClone(this.#data);
     }
 
     public setText(text: string | ReadonlyArray<Readonly<BindableString>>): void {
@@ -487,7 +487,7 @@ function VirtualTextNode<T extends Constructor>(clazz: T = PlaceholderClass as a
     }
 
     public startTextClone(original: VirtualTextNode, deep?: boolean) {
-      this.#data = deepClone(original.getTextData());
+      this.#data = foundry.utils.deepClone(original.getTextData());
     }
 
     public cloneTo(to: this, deep?: boolean): void {
