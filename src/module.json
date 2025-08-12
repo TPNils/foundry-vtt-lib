@@ -4,7 +4,7 @@
   "version": "v0.1.1",
   "compatibility": {
     "minimum": "11",
-    "verified": "12"
+    "verified": "13"
   },
   "description": "",
   "authors": [
@@ -20,6 +20,7 @@
     "hbsFiles": []
   },
   "esmodules": [
+    "scripts/testing/index.js",
     "scripts/utils/utils-hooks.js",
     "scripts/utils/utils-lib-wrapper.js",
     "scripts/render-engine/component-foundry-connector.js"

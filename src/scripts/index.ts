@@ -3,3 +3,4 @@ export { ComponentConfig, AttributeConfig, EventConfig, OutputConfig, OnInit, On
 export * from './utils/stoppable.js';
 export * from './types/html-data.js';
 import './render-engine/component-foundry-connector.js';
+import './testing/index.js';
